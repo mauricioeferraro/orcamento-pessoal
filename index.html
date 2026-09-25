@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Orçamento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <p class="eyebrow">Casa</p>
+      <h1>Orçamento</h1>
+    </div>
+    <p id="sync" class="sync">Carregando</p>
+  </header>
+
+  <div class="toolbar">
+    <div id="months" class="months"></div>
+    <div class="views">
+      <button type="button" data-action="set-view" data-view="month" class="is-on">Mês</button>
+      <button type="button" data-action="set-view" data-view="year">Ano</button>
+    </div>
+  </div>
+
+  <main id="main"></main>
+  <script src="app.js"></script>
+</body>
+</html>

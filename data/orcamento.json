@@ -1,0 +1,892 @@
+{
+  "2026-10": {
+    "incomes": [
+      {
+        "desc": "Salário Principal",
+        "val": 13150,
+        "parcela": "-"
+      },
+      {
+        "desc": "Renda Extra / Desenvolvimento AMAR",
+        "val": 11000,
+        "parcela": "-"
+      },
+      {
+        "desc": "Renda Extra / Projetos",
+        "val": 3000,
+        "parcela": "-"
+      },
+      {
+        "desc": "Nova Receita / Med Familia ",
+        "val": 7500,
+        "parcela": "1-2"
+      },
+      {
+        "desc": "Receita Luma",
+        "val": 6000,
+        "parcela": "-"
+      }
+    ],
+    "categories": [
+      {
+        "key": "moradia",
+        "label": "Moradia e Utilitários",
+        "color": "#1a73e8",
+        "fields": [
+          {
+            "label": "Aluguel / Condomínio",
+            "val": 10000,
+            "max": 6000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Energia, Água e Gás",
+            "val": 1000,
+            "max": 1500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Internet e TV a Cabo",
+            "val": 100,
+            "max": 500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Vivo",
+            "val": 100,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Claro",
+            "val": 400,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Vivo Mauricio",
+            "val": 70,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Diarista",
+            "val": 2536,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Passadeira",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Piscineiro",
+            "val": 270,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "alimentacao",
+        "label": "Alimentação",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Feira",
+            "val": 1200,
+            "max": 4000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Restaurantes e Delivery",
+            "val": 500,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "transporte",
+        "label": "Transporte e Veículos",
+        "color": "#107c41",
+        "fields": [
+          {
+            "label": "Carro",
+            "val": 4200,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "estilo_vida",
+        "label": "Lazer e Outros",
+        "color": "#a142f4",
+        "fields": [
+          {
+            "label": "Praia",
+            "val": 1100,
+            "max": 500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Apple (Cloud)",
+            "val": 200,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Personal",
+            "val": 700,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "CC Nu Luma",
+            "val": 390,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Manicure ",
+            "val": 270,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Consulta Geisa",
+            "val": 450,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Ultrassom",
+            "val": 670,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790307661888",
+        "label": "Filhos",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Escola",
+            "val": 3900,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Suplementaçoes",
+            "val": 100,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Mickey Medicamento",
+            "val": 110,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Mickey VetClin",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308073761",
+        "label": "Pais",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Condominio Mauro",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Cuidadoras Marlene",
+            "val": 1900,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308380186",
+        "label": "Investimento",
+        "color": "#107c41",
+        "fields": [
+          {
+            "label": "Investimento",
+            "val": 2000,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308423917",
+        "label": "Negociações",
+        "color": "#a142f4",
+        "fields": [
+          {
+            "label": "Santander",
+            "val": 800,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 245.35,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 1662.18,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 665.93,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Advogada Caixa",
+            "val": 600,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "1-2"
+          },
+          {
+            "label": "Renner",
+            "val": 1200,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "3-3"
+          }
+        ]
+      }
+    ]
+  },
+  "2026-11": {
+    "incomes": [
+      {
+        "desc": "Salário Principal",
+        "val": 13150,
+        "parcela": "-"
+      },
+      {
+        "desc": "Renda Extra / Desenvolvimento AMAR",
+        "val": 11000,
+        "parcela": "-"
+      },
+      {
+        "desc": "Renda Extra / Projetos",
+        "val": 3000,
+        "parcela": "-"
+      },
+      {
+        "desc": "Nova Receita / Med Familia ",
+        "val": 7500,
+        "parcela": "2-2"
+      },
+      {
+        "desc": "Receita Luma",
+        "val": 6000,
+        "parcela": "-"
+      }
+    ],
+    "categories": [
+      {
+        "key": "moradia",
+        "label": "Moradia e Utilitários",
+        "color": "#1a73e8",
+        "fields": [
+          {
+            "label": "Aluguel / Condomínio",
+            "val": 10000,
+            "max": 6000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Energia, Água e Gás",
+            "val": 1000,
+            "max": 1500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Internet e TV a Cabo",
+            "val": 100,
+            "max": 500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Vivo",
+            "val": 100,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Claro",
+            "val": 400,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Vivo Mauricio",
+            "val": 70,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Diarista",
+            "val": 2536,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Passadeira",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Piscineiro",
+            "val": 270,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "alimentacao",
+        "label": "Alimentação",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Feira",
+            "val": 1200,
+            "max": 4000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Restaurantes e Delivery",
+            "val": 500,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "transporte",
+        "label": "Transporte e Veículos",
+        "color": "#107c41",
+        "fields": [
+          {
+            "label": "Carro",
+            "val": 4200,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "estilo_vida",
+        "label": "Lazer e Outros",
+        "color": "#a142f4",
+        "fields": [
+          {
+            "label": "Praia",
+            "val": 1100,
+            "max": 500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Apple (Cloud)",
+            "val": 200,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Personal",
+            "val": 700,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "CC Nu Luma",
+            "val": 390,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Manicure ",
+            "val": 270,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Consulta Geisa",
+            "val": 450,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Ultrassom",
+            "val": 670,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790307661888",
+        "label": "Filhos",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Escola",
+            "val": 3900,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Suplementaçoes",
+            "val": 100,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Mickey Medicamento",
+            "val": 110,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Mickey VetClin",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308073761",
+        "label": "Pais",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Condominio Mauro",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Cuidadoras Marlene",
+            "val": 1900,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308380186",
+        "label": "Investimento",
+        "color": "#107c41",
+        "fields": [
+          {
+            "label": "Investimento",
+            "val": 2000,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308423917",
+        "label": "Negociações",
+        "color": "#a142f4",
+        "fields": [
+          {
+            "label": "Santander",
+            "val": 800,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 245.35,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 1662.18,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 665.93,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Advogada Caixa",
+            "val": 600,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "2-2"
+          }
+        ]
+      }
+    ]
+  },
+  "2026-12": {
+    "incomes": [
+      {
+        "desc": "Salário Principal",
+        "val": 13150,
+        "parcela": "-"
+      },
+      {
+        "desc": "Renda Extra / Desenvolvimento AMAR",
+        "val": 11000,
+        "parcela": "-"
+      },
+      {
+        "desc": "Renda Extra / Projetos",
+        "val": 3000,
+        "parcela": "-"
+      },
+      {
+        "desc": "Receita Luma",
+        "val": 6000,
+        "parcela": "-"
+      },
+      {
+        "desc": "13 Mauricio",
+        "val": 5.44381,
+        "parcela": "-"
+      },
+      {
+        "desc": "13 Luma",
+        "val": 5.39186,
+        "parcela": "-"
+      },
+      {
+        "desc": "IR Mauricio",
+        "val": 6000,
+        "parcela": "-"
+      },
+      {
+        "desc": "IR Luma",
+        "val": 500,
+        "parcela": "-"
+      },
+      {
+        "desc": "Receita Extra / Projeto Nutri",
+        "val": 15000,
+        "parcela": "-"
+      }
+    ],
+    "categories": [
+      {
+        "key": "moradia",
+        "label": "Moradia e Utilitários",
+        "color": "#1a73e8",
+        "fields": [
+          {
+            "label": "Aluguel / Condomínio",
+            "val": 10000,
+            "max": 6000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Energia, Água e Gás",
+            "val": 1000,
+            "max": 1500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Internet e TV a Cabo",
+            "val": 100,
+            "max": 500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Vivo",
+            "val": 100,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Claro",
+            "val": 250,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Vivo Mauricio",
+            "val": 70,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Diarista",
+            "val": 2536,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Passadeira",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Piscineiro",
+            "val": 270,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "alimentacao",
+        "label": "Alimentação",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Feira",
+            "val": 1200,
+            "max": 4000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Restaurantes e Delivery",
+            "val": 500,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "transporte",
+        "label": "Transporte e Veículos",
+        "color": "#107c41",
+        "fields": [
+          {
+            "label": "Carro",
+            "val": 4200,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "estilo_vida",
+        "label": "Lazer e Outros",
+        "color": "#a142f4",
+        "fields": [
+          {
+            "label": "Praia",
+            "val": 1100,
+            "max": 500,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Apple (Cloud)",
+            "val": 100,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Personal",
+            "val": 700,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Cartão de Credito Nu Luma",
+            "val": 390,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790307661888",
+        "label": "Filhos",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Escola",
+            "val": 3900,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308073761",
+        "label": "Pais",
+        "color": "#e37400",
+        "fields": [
+          {
+            "label": "Condominio Mauro",
+            "val": 300,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Cuidadoras Marlene",
+            "val": 1900,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308380186",
+        "label": "Investimento",
+        "color": "#107c41",
+        "fields": [
+          {
+            "label": "Investimento",
+            "val": 2000,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      },
+      {
+        "key": "custom_1790308423917",
+        "label": "Negociações",
+        "color": "#a142f4",
+        "fields": [
+          {
+            "label": "Santander",
+            "val": 800,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 245.35,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 1662.18,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          },
+          {
+            "label": "Bradesco",
+            "val": 665.93,
+            "max": 2000,
+            "status": "pendente",
+            "parcela": "-"
+          }
+        ]
+      }
+    ]
+  }
+}
