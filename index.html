@@ -1,33 +1,807 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Orçamento</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planejador de Orçamento Doméstico Completo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-light: #e8f0fe;
+      --success: #107c41;
+      --success-light: #e6f4ea;
+      --danger: #d93025;
+      --danger-light: #fce8e6;
+      --warning: #e37400;
+      --warning-light: #fef7e0;
+      --purple: #a142f4;
+      --purple-light: #f3e8fd;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #202124;
+      --text-muted: #5f6368;
+      --border: #dadce0;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; line-height: 1.5; }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* Header e Seleção de Mês */
+    header {
+      background: var(--card-bg);
+      padding: 20px 28px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .title-area h1 { font-size: 22px; color: var(--text); font-weight: 700; }
+    .title-area p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+    .controls-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    select, button, input[type="text"], input[type="number"] {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { opacity: 0.92; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { background: #f1f3f4; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-danger { background: var(--danger-light); color: var(--danger); border: 1px solid #f5c6cb; }
+    .btn-danger:hover { background: var(--danger); color: white; }
+
+    /* KPIs / Visão Geral */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      padding: 18px 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 5px;
+      background: var(--primary);
+    }
+    .kpi-card.success::before { background: var(--success); }
+    .kpi-card.danger::before { background: var(--danger); }
+    .kpi-card.warning::before { background: var(--warning); }
+    .kpi-card.purple::before { background: var(--purple); }
+
+    .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+    .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--text); }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Grid Principal de 2 Colunas */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card-bg);
+      padding: 22px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Receitas Lista */
+    .income-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .income-item input[type="text"].desc-input { flex: 2; min-width: 140px; }
+    .income-item input[type="text"].parcela-input { width: 80px; text-align: center; }
+    .income-item input[type="number"] { width: 110px; text-align: right; font-weight: 600; }
+
+    /* Categorias e Sliders */
+    .cat-block {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .cat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      background: #ffffff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #ebebeb;
+    }
+    .field-row input[type="text"].desc-input { flex: 1.5; min-width: 130px; font-weight: 500; }
+    .field-row input[type="text"].parcela-input { width: 75px; text-align: center; font-size: 12px; }
+    .field-row select.status-select { width: 105px; font-weight: 600; font-size: 12px; }
+    .field-row select.status-pago { color: var(--success); background-color: var(--success-light); border-color: #b7e1cd; }
+    .field-row select.status-pendente { color: var(--warning); background-color: var(--warning-light); border-color: #fce8b2; }
+    
+    .field-row input[type="range"] { flex: 1.2; min-width: 90px; accent-color: var(--primary); }
+    .field-row input[type="number"] { width: 100px; text-align: right; font-weight: 600; }
+
+    /* Barra de Progresso */
+    .progress-bar-bg {
+      height: 10px;
+      background: #e8eaed;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--success);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .chart-container { position: relative; height: 260px; }
+  </style>
 </head>
 <body>
-  <header class="top">
-    <div class="brand">
-      <p class="eyebrow">Casa</p>
-      <h1>Orçamento</h1>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="title-area">
+      <h1>Planejador de Orçamento Doméstico</h1>
+      <p id="cloudStatus">Controle financeiro mensal completo com virada automática de parcelas</p>
     </div>
-    <p id="sync" class="sync">Carregando</p>
+    <div class="controls-area">
+      <label for="monthSelect"><strong>Mês:</strong></label>
+      <select id="monthSelect" onchange="switchMonth()">
+        <optgroup label="2026">
+          <option value="2026-01">Janeiro / 2026</option>
+          <option value="2026-02">Fevereiro / 2026</option>
+          <option value="2026-03">Março / 2026</option>
+          <option value="2026-04">Abril / 2026</option>
+          <option value="2026-05">Maio / 2026</option>
+          <option value="2026-06">Junho / 2026</option>
+          <option value="2026-07">Julho / 2026</option>
+          <option value="2026-08">Agosto / 2026</option>
+          <option value="2026-09">Setembro / 2026</option>
+          <option value="2026-10" selected>Outubro / 2026</option>
+          <option value="2026-11">Novembro / 2026</option>
+          <option value="2026-12">Dezembro / 2026</option>
+        </optgroup>
+        <optgroup label="2027">
+          <option value="2027-01">Janeiro / 2027</option>
+          <option value="2027-02">Fevereiro / 2027</option>
+          <option value="2027-03">Março / 2027</option>
+          <option value="2027-04">Abril / 2027</option>
+          <option value="2027-05">Maio / 2027</option>
+          <option value="2027-06">Junho / 2027</option>
+          <option value="2027-07">Julho / 2027</option>
+          <option value="2027-08">Agosto / 2027</option>
+          <option value="2027-09">Setembro / 2027</option>
+          <option value="2027-10">Outubro / 2027</option>
+          <option value="2027-11">Novembro / 2027</option>
+          <option value="2027-12">Dezembro / 2027</option>
+        </optgroup>
+      </select>
+      <button class="btn btn-outline" onclick="copyFromPreviousMonth(true)">🔄 Replicar Mês Anterior</button>
+      <button class="btn btn-outline" onclick="exportBackup()">📥 Backup</button>
+    </div>
   </header>
 
-  <div class="toolbar">
-    <div id="months" class="months"></div>
-    <div class="views">
-      <button type="button" data-action="set-view" data-view="month" class="is-on">Mês</button>
-      <button type="button" data-action="set-view" data-view="year">Ano</button>
+  <!-- Indicadores Principais (KPIs) -->
+  <div class="kpi-grid">
+    <div class="kpi-card success">
+      <div class="kpi-label">Renda da Casa</div>
+      <div class="kpi-value" id="kpiIncome">R$ 0,00</div>
+      <div class="kpi-sub">Total de fontes de receita</div>
+    </div>
+    <div class="kpi-card danger">
+      <div class="kpi-label">Despesas Totais</div>
+      <div class="kpi-value" id="kpiExpenses">R$ 0,00</div>
+      <div class="kpi-sub">Gastos previstos no mês</div>
+    </div>
+    <div class="kpi-card warning" id="kpiMonthBalanceCard">
+      <div class="kpi-label">Sobra / Déficit (Mês)</div>
+      <div class="kpi-value" id="kpiMonthBalance">R$ 0,00</div>
+      <div class="kpi-sub">Resultado isolado do mês</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Saldo Acumulado Geral</div>
+      <div class="kpi-value" id="kpiAccumulated">R$ 0,00</div>
+      <div class="kpi-sub">Acumulado de todos os meses</div>
     </div>
   </div>
 
-  <main id="main"></main>
-  <script src="app.js"></script>
+  <div class="grid-2">
+    <!-- Coluna da Esquerda: Receitas e Categorias -->
+    <div>
+      <!-- Bloco de Receitas Dinâmicas -->
+      <div class="card">
+        <div class="card-title">
+          <span>Fontes de Renda / Receitas</span>
+          <button class="btn btn-sm" onclick="addIncomeSource()">+ Nova Renda</button>
+        </div>
+        
+        <div id="incomesContainer">
+          <!-- Renderizado Dinamicamente -->
+        </div>
+
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="savingsProgress"></div>
+        </div>
+        <p id="savingsRatioText" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;"></p>
+      </div>
+
+      <!-- Bloco de Categorias e Despesas -->
+      <div class="card">
+        <div class="card-title">
+          <span>Categorias & Despesas</span>
+          <button class="btn btn-sm" onclick="addNewCategory()">+ Nova Categoria</button>
+        </div>
+        <div id="categoriesContainer">
+          <!-- Renderizado Dinamicamente -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Coluna da Direita: Gráficos e Resumo -->
+    <div>
+      <div class="card">
+        <div class="card-title">Detalhamento de gastos</div>
+        <div class="chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Resumo de Pagamentos</div>
+        <div id="paymentStatusSummary" style="font-size: 13px; color: var(--text-muted); line-height: 1.6;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Saúde do Orçamento</div>
+        <p id="healthSummary" style="font-size: 13px; color: var(--text-muted); line-height: 1.6;"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const defaultCategories = [
+    {
+      key: "moradia", label: "Moradia e Utilitários", color: "#1a73e8",
+      fields: [
+        { label: "Aluguel / Condomínio", val: 2200, max: 6000, status: "pago", parcela: "-" },
+        { label: "Energia, Água e Gás", val: 450, max: 1500, status: "pendente", parcela: "-" },
+        { label: "Internet e TV a Cabo", val: 180, max: 500, status: "pago", parcela: "-" }
+      ]
+    },
+    {
+      key: "alimentacao", label: "Alimentação", color: "#e37400",
+      fields: [
+        { label: "Supermercado e Feira", val: 1600, max: 4000, status: "pendente", parcela: "-" },
+        { label: "Restaurantes e Delivery", val: 500, max: 2000, status: "pago", parcela: "-" }
+      ]
+    },
+    {
+      key: "transporte", label: "Transporte e Veículos", color: "#107c41",
+      fields: [
+        { label: "Combustível", val: 550, max: 2000, status: "pago", parcela: "-" },
+        { label: "Manutenção / Seguro", val: 300, max: 1500, status: "pendente", parcela: "2/6" }
+      ]
+    },
+    {
+      key: "estilo_vida", label: "Lazer e Outros", color: "#a142f4",
+      fields: [
+        { label: "Streaming e Assinaturas", val: 120, max: 500, status: "pago", parcela: "-" },
+        { label: "Compras Cartão de Crédito", val: 400, max: 2000, status: "pendente", parcela: "3/10" }
+      ]
+    }
+  ];
+
+  const FB_URL = "https://amar-care-default-rtdb.firebaseio.com/orcamento_pessoal.json";
+  let db = {};
+  let chartInstance = null;
+  let pushTimer = null;
+  let lastWrite = 0;
+  let applyingRemote = false;
+
+  // Lista completa de meses suportados (2026 e 2027)
+  const allMonthsList = [
+    "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11", "2026-12",
+    "2027-01", "2027-02", "2027-03", "2027-04", "2027-05", "2027-06", "2027-07", "2027-08", "2027-09", "2027-10", "2027-11", "2027-12"
+  ];
+
+  function getMonth() { return document.getElementById('monthSelect').value; }
+
+  // Função para avançar o texto de uma parcela (ex: "2/6" -> "3/6" ou finaliza se era "6/6")
+  function advanceParcelStr(parcelaStr) {
+    if (!parcelaStr || parcelaStr === '-' || (!parcelaStr.includes('/') && !parcelaStr.includes('-'))) return { newStr: parcelaStr || '-', shouldKeep: true };
+    const sep = parcelaStr.includes('/') ? '/' : '-';
+    const parts = parcelaStr.split(sep);
+    let current = parseInt(parts[0], 10);
+    let total = parseInt(parts[1], 10);
+
+    if (isNaN(current) || isNaN(total)) return { newStr: parcelaStr, shouldKeep: true };
+
+    if (current >= total) {
+      return { newStr: null, shouldKeep: false }; // Parcela finalizada no mês anterior, encerra
+    }
+
+    return { newStr: `${current + 1}${sep}${total}`, shouldKeep: true };
+  }
+
+  // Função auxiliar para encontrar a chave do mês imediatamente anterior na linha do tempo
+  function getPreviousMonthKey(currentMonthKey) {
+    const idx = allMonthsList.indexOf(currentMonthKey);
+    if (idx > 0) return allMonthsList[idx - 1];
+    return null;
+  }
+
+  // Replicar dados do mês anterior com cálculo automático de parcelas
+  function copyFromPreviousMonth(isManual = false) {
+    const currentM = getMonth();
+    const prevM = getPreviousMonthKey(currentM);
+
+    if (!prevM || !db[prevM]) {
+      if (isManual) alert("Não há dados do mês anterior para copiar.");
+      return false;
+    }
+
+    if (isManual && db[currentM] && (db[currentM].incomes.length > 0 || db[currentM].categories.length > 0)) {
+      if (!confirm(`Deseja sobrescrever os lançamentos de ${currentM} pelos dados atualizados do mês anterior (${prevM})?`)) {
+        return false;
+      }
+    }
+
+    const prevData = db[prevM];
+
+    // 1. Processar e Incrementar Parcelas das Receitas
+    const newIncomes = [];
+    (prevData.incomes || []).forEach(inc => {
+      const pRes = advanceParcelStr(inc.parcela);
+      if (pRes.shouldKeep) {
+        newIncomes.push({
+          desc: inc.desc,
+          val: inc.val,
+          parcela: pRes.newStr
+        });
+      }
+    });
+
+    // 2. Processar e Incrementar Parcelas das Despesas por Categoria
+    const newCategories = [];
+    (prevData.categories || []).forEach(cat => {
+      const newFields = [];
+      (cat.fields || []).forEach(f => {
+        const pRes = advanceParcelStr(f.parcela);
+        if (pRes.shouldKeep) {
+          newFields.push({
+            label: f.label,
+            val: f.val,
+            max: f.max || 5000,
+            status: "pendente", // Reseta status de pagamento para o novo mês
+            parcela: pRes.newStr
+          });
+        }
+      });
+
+      if (newFields.length > 0) {
+        newCategories.push({
+          key: cat.key,
+          label: cat.label,
+          color: cat.color || '#1a73e8',
+          fields: newFields
+        });
+      }
+    });
+
+    db[currentM] = {
+      incomes: newIncomes,
+      categories: newCategories
+    };
+
+    saveDB();
+    if (isManual) alert(`Dados de ${prevM} replicados para ${currentM} com sucesso!`);
+    return true;
+  }
+
+  function initMonthData(m) {
+    if (!db[m]) {
+      const copied = copyFromPreviousMonth(false);
+      if (!copied) {
+        db[m] = {
+          incomes: [{ desc: "Salário Principal", val: 7000, parcela: "-" }],
+          categories: JSON.parse(JSON.stringify(defaultCategories))
+        };
+      }
+    }
+  }
+
+  function saveDB() {
+    localStorage.setItem('financesFullCustomDB', JSON.stringify(db));
+    renderAll();
+    if (applyingRemote) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(pushFirebase, 400);
+  }
+
+  function setCloudStatus(text) {
+    const el = document.getElementById('cloudStatus');
+    if (el) el.textContent = text;
+  }
+
+  async function pushFirebase() {
+    pushTimer = null;
+    const updatedAt = Date.now();
+    lastWrite = updatedAt;
+    try {
+      const response = await fetch(FB_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ updatedAt, data: db })
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      setCloudStatus("Salvo no Firebase");
+    } catch (error) {
+      setCloudStatus("Guardado neste navegador. O Firebase não aceitou a gravação.");
+    }
+  }
+
+  function listenFirebase() {
+    const source = new EventSource(FB_URL);
+    source.addEventListener("put", (event) => {
+      const payload = JSON.parse(event.data);
+      if (payload.path !== "/") return;
+      const doc = payload.data;
+      if (!doc || doc.updatedAt === lastWrite || pushTimer) return;
+      const next = doc.data && typeof doc.data === "object" ? doc.data : null;
+      if (!next) return;
+      db = next;
+      localStorage.setItem('financesFullCustomDB', JSON.stringify(db));
+      applyingRemote = true;
+      renderAll();
+      applyingRemote = false;
+      setCloudStatus("Atualizado pelo Firebase");
+    });
+    source.onerror = () => {
+      source.close();
+    };
+  }
+
+  function monthsFrom(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    if (raw.data && typeof raw.data === "object") return raw.data;
+    const keys = Object.keys(raw);
+    if (keys.length && keys.every((key) => /^\d{4}-\d{2}$/.test(key))) return raw;
+    return null;
+  }
+
+  async function boot() {
+    setCloudStatus("Carregando orçamento…");
+    try {
+      db = await fetch("data/orcamento.json").then((response) => response.json());
+    } catch (error) {
+      db = JSON.parse(localStorage.getItem('financesFullCustomDB') || "null") || {};
+    }
+    try {
+      const remote = monthsFrom(await fetch(FB_URL).then((response) => {
+        if (!response.ok) throw new Error(String(response.status));
+        return response.json();
+      }));
+      if (remote) db = remote;
+      setCloudStatus("Ligado ao Firebase");
+      listenFirebase();
+    } catch (error) {
+      setCloudStatus("Sem leitura no Firebase. Mostrando a cópia local.");
+    }
+    switchMonth();
+  }
+
+  function switchMonth() {
+    initMonthData(getMonth());
+    renderAll();
+  }
+
+  function renderAll() {
+    const m = getMonth();
+    initMonthData(m);
+
+    renderKPIs();
+    renderIncomes();
+    renderCategories();
+    renderChart();
+  }
+
+  function getTotalIncome(m) {
+    return (db[m]?.incomes || []).reduce((acc, i) => acc + Number(i.val || 0), 0);
+  }
+
+  function getTotalExpenses(m) {
+    let exp = 0;
+    (db[m]?.categories || []).forEach(c => c.fields.forEach(f => exp += Number(f.val || 0)));
+    return exp;
+  }
+
+  function renderKPIs() {
+    const m = getMonth();
+    const income = getTotalIncome(m);
+    const expenses = getTotalExpenses(m);
+    const monthBalance = income - expenses;
+
+    let accumulated = 0;
+    Object.keys(db).sort().forEach(mKey => {
+      accumulated += (getTotalIncome(mKey) - getTotalExpenses(mKey));
+    });
+
+    document.getElementById('kpiIncome').innerText = `R$ ${income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('kpiExpenses').innerText = `R$ ${expenses.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('kpiMonthBalance').innerText = `R$ ${monthBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('kpiAccumulated').innerText = `R$ ${accumulated.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+    // Barra de Progresso
+    const savingsRatio = income > 0 ? (monthBalance / income) * 100 : 0;
+    const fillBar = document.getElementById('savingsProgress');
+    const fillPercent = Math.max(0, Math.min(100, savingsRatio));
+    fillBar.style.width = `${fillPercent}%`;
+    fillBar.style.backgroundColor = savingsRatio >= 20 ? 'var(--success)' : (savingsRatio >= 0 ? 'var(--warning)' : 'var(--danger)');
+
+    document.getElementById('savingsRatioText').innerText = `Sobra / Poupança: ${savingsRatio.toFixed(1)}% (R$ ${monthBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})})`;
+
+    // Resumo de Pagamentos (Pago vs Pendente)
+    let totalPago = 0;
+    let totalPendente = 0;
+    (db[m]?.categories || []).forEach(c => c.fields.forEach(f => {
+      if (f.status === 'pago') totalPago += Number(f.val || 0);
+      else totalPendente += Number(f.val || 0);
+    }));
+
+    document.getElementById('paymentStatusSummary').innerHTML = `
+      🟢 <strong>Total Pago:</strong> R$ ${totalPago.toLocaleString('pt-BR', {minimumFractionDigits: 2})}<br>
+      🟡 <strong>Total Pendente:</strong> R$ ${totalPendente.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+    `;
+
+    document.getElementById('healthSummary').innerHTML = `
+      Neste mês, você comprometeu <strong>${income > 0 ? ((expenses/income)*100).toFixed(1) : 0}%</strong> da sua renda em despesas.<br><br>
+      ${monthBalance >= 0 
+        ? '🟢 <strong>Orçamento Equilibrado!</strong> Suas despesas estão dentro do limite da renda.' 
+        : '🔴 <strong>Atenção!</strong> Os gastos ultrapassaram a renda do mês.'}
+    `;
+  }
+
+  /* --- RECEITAS --- */
+  function renderIncomes() {
+    const m = getMonth();
+    const container = document.getElementById('incomesContainer');
+    container.innerHTML = '';
+
+    (db[m].incomes || []).forEach((inc, idx) => {
+      container.innerHTML += `
+        <div class="income-item">
+          <input type="text" class="desc-input" value="${inc.desc}" placeholder="Fonte de receita" onchange="updateIncomeItem(${idx}, 'desc', this.value)">
+          <input type="text" class="parcela-input" value="${inc.parcela || '-'}" placeholder="Parcela (ex: 1/12)" title="Quantidade de parcelas" onchange="updateIncomeItem(${idx}, 'parcela', this.value)">
+          <input type="number" value="${inc.val}" placeholder="Valor (R$)" step="50" onchange="updateIncomeItem(${idx}, 'val', this.value)">
+          ${(db[m].incomes.length > 1) ? `<button class="btn btn-sm btn-danger" onclick="removeIncomeSource(${idx})">✕</button>` : ''}
+        </div>
+      `;
+    });
+  }
+
+  function addIncomeSource() {
+    const m = getMonth();
+    if (!db[m].incomes) db[m].incomes = [];
+    db[m].incomes.push({ desc: "Nova Receita / Extra", val: 500, parcela: "-" });
+    saveDB();
+  }
+
+  function removeIncomeSource(idx) {
+    const m = getMonth();
+    db[m].incomes.splice(idx, 1);
+    saveDB();
+  }
+
+  function updateIncomeItem(idx, field, val) {
+    const m = getMonth();
+    if (field === 'val') db[m].incomes[idx].val = Number(val) || 0;
+    else db[m].incomes[idx][field] = val;
+    saveDB();
+  }
+
+  /* --- CATEGORIAS & DESPESAS --- */
+  function renderCategories() {
+    const m = getMonth();
+    const data = db[m];
+
+    const container = document.getElementById('categoriesContainer');
+    container.innerHTML = '';
+
+    data.categories.forEach((cat, cIdx) => {
+      let catTotal = cat.fields.reduce((acc, f) => acc + Number(f.val || 0), 0);
+      let catHtml = `
+        <div class="cat-block">
+          <div class="cat-header">
+            <input type="text" value="${cat.label}" style="font-weight:700; border:none; background:transparent; font-size:15px; color:${cat.color || '#1a73e8'}; width:60%;" onchange="updateCategoryTitle(${cIdx}, this.value)">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-weight:700; color:${cat.color || '#1a73e8'};">R$ ${catTotal.toLocaleString('pt-BR')}</span>
+              <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="addExpenseField(${cIdx})">+ Linha</button>
+              ${data.categories.length > 1 ? `<button class="btn btn-sm btn-danger" style="padding:2px 6px;" onclick="removeCategory(${cIdx})">✕</button>` : ''}
+            </div>
+          </div>
+      `;
+
+      cat.fields.forEach((f, fIdx) => {
+        catHtml += `
+          <div class="field-row">
+            <input type="text" class="desc-input" value="${f.label}" placeholder="Descrição do gasto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'label', this.value)">
+            <input type="text" class="parcela-input" value="${f.parcela || '-'}" placeholder="Parc. (1/12)" title="Nº da Parcela" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'parcela', this.value)">
+            <select class="status-select ${f.status === 'pago' ? 'status-pago' : 'status-pendente'}" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'status', this.value)">
+              <option value="pendente" ${f.status === 'pendente' ? 'selected' : ''}>🟡 Pendente</option>
+              <option value="pago" ${f.status === 'pago' ? 'selected' : ''}>🟢 Pago</option>
+            </select>
+            <input type="range" min="0" max="${f.max || 5000}" step="25" value="${f.val}" oninput="updateExpenseField(${cIdx}, ${fIdx}, 'val', this.value)">
+            <input type="number" value="${f.val}" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'val', this.value)">
+            ${cat.fields.length > 1 ? `<button class="btn btn-sm btn-danger" style="padding:3px 6px;" onclick="removeExpenseField(${cIdx},${fIdx})">✕</button>` : ''}
+          </div>
+        `;
+      });
+
+      catHtml += `</div>`;
+      container.innerHTML += catHtml;
+    });
+  }
+
+  function addNewCategory() {
+    const m = getMonth();
+    const colors = ['#1a73e8', '#e37400', '#107c41', '#a142f4', '#d93025', '#00897b'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    db[m].categories.push({
+      key: "custom_" + Date.now(),
+      label: "Nova Categoria",
+      color: randomColor,
+      fields: [
+        { label: "Nova Despesa", val: 100, max: 2000, status: "pendente", parcela: "-" }
+      ]
+    });
+    saveDB();
+  }
+
+  function removeCategory(cIdx) {
+    const m = getMonth();
+    db[m].categories.splice(cIdx, 1);
+    saveDB();
+  }
+
+  function updateCategoryTitle(cIdx, newTitle) {
+    const m = getMonth();
+    db[m].categories[cIdx].label = newTitle;
+    saveDB();
+  }
+
+  function addExpenseField(cIdx) {
+    const m = getMonth();
+    db[m].categories[cIdx].fields.push({
+      label: "Nova Despesa", val: 100, max: 2000, status: "pendente", parcela: "-"
+    });
+    saveDB();
+  }
+
+  function removeExpenseField(cIdx, fIdx) {
+    const m = getMonth();
+    db[m].categories[cIdx].fields.splice(fIdx, 1);
+    saveDB();
+  }
+
+  function updateExpenseField(cIdx, fIdx, field, val) {
+    const m = getMonth();
+    if (field === 'val') {
+      db[m].categories[cIdx].fields[fIdx].val = Number(val) || 0;
+    } else {
+      db[m].categories[cIdx].fields[fIdx][field] = val;
+    }
+    saveDB();
+  }
+
+  /* --- GRÁFICOS E BACKUP --- */
+  function renderChart() {
+    const m = getMonth();
+    const data = db[m];
+
+    const labels = data.categories.map(c => c.label);
+    const values = data.categories.map(c => c.fields.reduce((a, f) => a + Number(f.val || 0), 0));
+    const colors = data.categories.map(c => c.color || '#1a73e8');
+
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  }
+
+  function exportBackup() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute("href", dataStr);
+    dlAnchor.setAttribute("download", "meu_orcamento_completo.json");
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
+  }
+
+  boot();
+</script>
+
 </body>
 </html>
