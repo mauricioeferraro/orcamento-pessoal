@@ -29,7 +29,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 24px; line-height: 1.5; }
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1280px; margin: 0 auto; }
 
     /* Header e Seleção de Mês */
     header {
@@ -50,7 +50,7 @@
     .title-area p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
     .controls-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    select, button, input[type="text"], input[type="number"] {
+    select, button, input[type="text"], input[type="number"], input[type="date"] {
       padding: 8px 12px;
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -109,14 +109,14 @@
     .kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--text); }
     .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Grid Principal de 2 Colunas */
-    .grid-2 {
+    .summary-grid {
       display: grid;
-      grid-template-columns: 1.3fr 0.7fr;
-      gap: 24px;
+      grid-template-columns: 1.3fr 0.85fr 0.85fr;
+      gap: 16px;
       margin-bottom: 24px;
     }
-    @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } }
+    .summary-grid .card { margin-bottom: 0; }
+    @media (max-width: 960px) { .summary-grid { grid-template-columns: 1fr; } }
 
     .card {
       background: var(--card-bg);
@@ -138,7 +138,7 @@
     /* Receitas Lista */
     .income-item {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 8px;
       margin-bottom: 10px;
       flex-wrap: wrap;
@@ -146,6 +146,86 @@
     .income-item input[type="text"].desc-input { flex: 2; min-width: 140px; }
     .income-item input[type="text"].parcela-input { width: 80px; text-align: center; }
     .income-item input[type="number"] { width: 110px; text-align: right; font-weight: 600; }
+
+    .due-field { display: flex; flex-direction: column; gap: 2px; }
+    .due-field span { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.02em; }
+    .due-field input { width: 142px; padding: 6px 8px; }
+
+    .view-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .tab {
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .section-hint { font-size: 12px; color: var(--text-muted); margin: -8px 0 14px; }
+
+    .cash-note {
+      background: var(--warning-light);
+      border: 1px solid #fce8b2;
+      color: #8a4b00;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .cash-note.ok { background: var(--success-light); border-color: #b7e1cd; color: var(--success); }
+    .day-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .day-card.neg { border-color: #f5c6cb; }
+    .day-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+    }
+    .day-card.neg .day-head { background: var(--danger-light); }
+    .day-title { font-weight: 700; }
+    .day-move { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .balance-pill {
+      text-align: right;
+      border-radius: 10px;
+      padding: 8px 12px;
+      min-width: 150px;
+    }
+    .balance-pill span, .balance-pill em { display: block; font-size: 11px; font-style: normal; }
+    .balance-pill strong { display: block; font-size: 16px; }
+    .balance-pill.pos { background: var(--success-light); color: var(--success); }
+    .balance-pill.neg { background: white; color: var(--danger); }
+    .move {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-top: 1px solid #f1f3f4;
+    }
+    .move-main { flex: 1; min-width: 0; }
+    .move-main strong { display: block; font-size: 14px; }
+    .move-main span { font-size: 12px; color: var(--text-muted); }
+    .move-val { font-weight: 700; white-space: nowrap; }
+    .move-val.in { color: var(--success); }
+    .move-val.out { color: var(--danger); }
+    .move.paid { opacity: 0.72; }
+    .empty-flow { font-size: 13px; color: var(--text-muted); padding: 8px 0 4px; }
 
     /* Categorias e Sliders */
     .cat-block {
@@ -164,24 +244,39 @@
       font-size: 15px;
     }
     .field-row {
-      display: flex;
-      align-items: center;
+      display: grid;
+      grid-template-columns: minmax(160px, 1.5fr) 76px minmax(142px, 168px) 118px 104px 36px;
+      grid-template-areas:
+        "desc parcela due status valor del"
+        "range range range range range range";
       gap: 8px;
+      align-items: end;
       margin-bottom: 12px;
-      flex-wrap: wrap;
       background: #ffffff;
       padding: 10px 12px;
       border-radius: 8px;
       border: 1px solid #ebebeb;
     }
-    .field-row input[type="text"].desc-input { flex: 1.5; min-width: 130px; font-weight: 500; }
-    .field-row input[type="text"].parcela-input { width: 75px; text-align: center; font-size: 12px; }
-    .field-row select.status-select { width: 105px; font-weight: 600; font-size: 12px; }
+    .field-row input[type="text"].desc-input { grid-area: desc; min-width: 0; width: 100%; font-weight: 500; }
+    .field-row input[type="text"].parcela-input { grid-area: parcela; width: 100%; text-align: center; font-size: 12px; }
+    .field-row .due-field { grid-area: due; }
+    .field-row .due-field input { width: 100%; }
+    .field-row select.status-select { grid-area: status; width: 100%; font-weight: 600; font-size: 12px; }
     .field-row select.status-pago { color: var(--success); background-color: var(--success-light); border-color: #b7e1cd; }
     .field-row select.status-pendente { color: var(--warning); background-color: var(--warning-light); border-color: #fce8b2; }
-    
-    .field-row input[type="range"] { flex: 1.2; min-width: 90px; accent-color: var(--primary); }
-    .field-row input[type="number"] { width: 100px; text-align: right; font-weight: 600; }
+    .field-row input[type="range"] { grid-area: range; width: 100%; accent-color: var(--primary); margin: 0; }
+    .field-row input[type="number"] { grid-area: valor; width: 100%; text-align: right; font-weight: 600; }
+    .field-row .btn-danger { grid-area: del; justify-self: end; }
+    @media (max-width: 760px) {
+      .field-row {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "desc desc"
+          "parcela due"
+          "status valor"
+          "range del";
+      }
+    }
 
     /* Barra de Progresso */
     .progress-bar-bg {
@@ -247,6 +342,12 @@
     </div>
   </header>
 
+  <nav class="view-tabs" aria-label="Visões do orçamento">
+    <button type="button" id="tabBudget" class="tab active" onclick="setView('budget')">Orçamento</button>
+    <button type="button" id="tabCash" class="tab" onclick="setView('cashflow')">Fluxo de caixa</button>
+  </nav>
+
+  <div id="viewBudget">
   <!-- Indicadores Principais (KPIs) -->
   <div class="kpi-grid">
     <div class="kpi-card success">
@@ -271,40 +372,7 @@
     </div>
   </div>
 
-  <div class="grid-2">
-    <!-- Coluna da Esquerda: Receitas e Categorias -->
-    <div>
-      <!-- Bloco de Receitas Dinâmicas -->
-      <div class="card">
-        <div class="card-title">
-          <span>Fontes de Renda / Receitas</span>
-          <button class="btn btn-sm" onclick="addIncomeSource()">+ Nova Renda</button>
-        </div>
-        
-        <div id="incomesContainer">
-          <!-- Renderizado Dinamicamente -->
-        </div>
-
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="savingsProgress"></div>
-        </div>
-        <p id="savingsRatioText" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;"></p>
-      </div>
-
-      <!-- Bloco de Categorias e Despesas -->
-      <div class="card">
-        <div class="card-title">
-          <span>Categorias & Despesas</span>
-          <button class="btn btn-sm" onclick="addNewCategory()">+ Nova Categoria</button>
-        </div>
-        <div id="categoriesContainer">
-          <!-- Renderizado Dinamicamente -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Coluna da Direita: Gráficos e Resumo -->
-    <div>
+  <div class="summary-grid">
       <div class="card">
         <div class="card-title">Detalhamento de gastos</div>
         <div class="chart-container">
@@ -321,7 +389,44 @@
         <div class="card-title">Saúde do Orçamento</div>
         <p id="healthSummary" style="font-size: 13px; color: var(--text-muted); line-height: 1.6;"></p>
       </div>
-    </div>
+  </div>
+
+      <!-- Bloco de Receitas Dinâmicas -->
+      <div class="card">
+        <div class="card-title">
+          <span>Fontes de Renda / Receitas</span>
+          <button class="btn btn-sm" onclick="addIncomeSource()">+ Nova Renda</button>
+        </div>
+        
+        <p class="section-hint">Informe o dia em que cada valor cai na conta. O fluxo de caixa usa essa data.</p>
+        <div id="incomesContainer">
+          <!-- Renderizado Dinamicamente -->
+        </div>
+
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="savingsProgress"></div>
+        </div>
+        <p id="savingsRatioText" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;"></p>
+      </div>
+
+      <!-- Bloco de Categorias e Despesas -->
+      <div class="card">
+        <div class="card-title">
+          <span>Categorias & Despesas</span>
+          <button class="btn btn-sm" onclick="addNewCategory()">+ Nova Categoria</button>
+        </div>
+        <p class="section-hint">Informe o pagamento previsto de cada conta. Dá para ajustar o dia direto na aba Fluxo de caixa.</p>
+        <div id="categoriesContainer">
+          <!-- Renderizado Dinamicamente -->
+        </div>
+      </div>
+  </div>
+
+  <div id="viewCash" hidden>
+    <div class="kpi-grid" id="cashKpis"></div>
+    <div id="cashWarning"></div>
+    <div id="cashUndated"></div>
+    <div id="cashTimeline"></div>
   </div>
 </div>
 
@@ -364,6 +469,7 @@
   let pushTimer = null;
   let lastWrite = 0;
   let applyingRemote = false;
+  let currentView = 'budget';
 
   // Lista completa de meses suportados (2026 e 2027)
   const allMonthsList = [
@@ -423,7 +529,8 @@
         newIncomes.push({
           desc: inc.desc,
           val: inc.val,
-          parcela: pRes.newStr
+          parcela: pRes.newStr,
+          due: shiftDueToMonth(inc.due, currentM)
         });
       }
     });
@@ -440,7 +547,8 @@
             val: f.val,
             max: f.max || 5000,
             status: "pendente", // Reseta status de pagamento para o novo mês
-            parcela: pRes.newStr
+            parcela: pRes.newStr,
+            due: shiftDueToMonth(f.due, currentM)
           });
         }
       });
@@ -562,14 +670,233 @@
     renderAll();
   }
 
+  function setView(view) {
+    currentView = view === 'cashflow' ? 'cashflow' : 'budget';
+    document.getElementById('viewBudget').hidden = currentView !== 'budget';
+    document.getElementById('viewCash').hidden = currentView !== 'cashflow';
+    document.getElementById('tabBudget').classList.toggle('active', currentView === 'budget');
+    document.getElementById('tabCash').classList.toggle('active', currentView === 'cashflow');
+    renderAll();
+  }
+
   function renderAll() {
     const m = getMonth();
     initMonthData(m);
 
+    if (currentView === 'cashflow') {
+      renderCashflow();
+      return;
+    }
     renderKPIs();
     renderIncomes();
     renderCategories();
     renderChart();
+  }
+
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function safeDate(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : '';
+  }
+
+  function monthBounds(monthKey) {
+    const [year, month] = monthKey.split('-').map(Number);
+    const last = new Date(year, month, 0).getDate();
+    return { min: `${monthKey}-01`, max: `${monthKey}-${String(last).padStart(2, '0')}` };
+  }
+
+  function shiftDueToMonth(due, targetMonth) {
+    const safe = safeDate(due);
+    if (!safe) return '';
+    const day = Number(safe.slice(8, 10));
+    const last = Number(monthBounds(targetMonth).max.slice(8, 10));
+    return `${targetMonth}-${String(Math.min(day, last)).padStart(2, '0')}`;
+  }
+
+  function formatMoney(value) {
+    const amount = Number(value) || 0;
+    const abs = Math.abs(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${amount < 0 ? '− ' : ''}R$ ${abs}`;
+  }
+
+  function formatLongDay(iso) {
+    const [year, month, day] = iso.split('-').map(Number);
+    const text = new Date(year, month - 1, day).toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long'
+    });
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function openingBalance(monthKey) {
+    return Object.keys(db).sort().reduce((acc, key) => {
+      if (key >= monthKey) return acc;
+      return acc + getTotalIncome(key) - getTotalExpenses(key);
+    }, 0);
+  }
+
+  function collectMonthEvents(monthKey) {
+    const { min, max } = monthBounds(monthKey);
+    const dated = [];
+    const undated = [];
+    const place = (item) => {
+      const due = safeDate(item.due);
+      if (due && due >= min && due <= max) dated.push({ ...item, due });
+      else undated.push(item);
+    };
+
+    (db[monthKey]?.incomes || []).forEach((inc, idx) => {
+      place({
+        kind: 'in', idx, due: inc.due, val: Number(inc.val || 0),
+        label: inc.desc || 'Receita', meta: 'Recebimento'
+      });
+    });
+    (db[monthKey]?.categories || []).forEach((cat, cIdx) => {
+      (cat.fields || []).forEach((field, fIdx) => {
+        place({
+          kind: 'out', cIdx, fIdx, due: field.due, val: Number(field.val || 0),
+          label: field.label || 'Despesa',
+          meta: `${cat.label || 'Despesa'} · ${field.status === 'pago' ? 'Pago' : 'Pendente'}`,
+          paid: field.status === 'pago'
+        });
+      });
+    });
+    dated.sort((a, b) => a.due.localeCompare(b.due) || (a.kind === b.kind ? b.val - a.val : a.kind === 'in' ? -1 : 1));
+    return { dated, undated };
+  }
+
+  function dueInput(item, min, max) {
+    const handler = item.kind === 'in'
+      ? `updateIncomeItem(${item.idx}, 'due', this.value)`
+      : `updateExpenseField(${item.cIdx}, ${item.fIdx}, 'due', this.value)`;
+    const caption = item.kind === 'in' ? 'Receber em' : 'Pagar em';
+    return `<label class="due-field"><span>${caption}</span><input type="date" min="${min}" max="${max}" value="${esc(safeDate(item.due))}" onchange="${handler}"></label>`;
+  }
+
+  function renderCashflow() {
+    const monthKey = getMonth();
+    const { min, max } = monthBounds(monthKey);
+    const opening = openingBalance(monthKey);
+    const { dated, undated } = collectMonthEvents(monthKey);
+    const groups = [];
+    dated.forEach((item) => {
+      let group = groups.find((entry) => entry.date === item.due);
+      if (!group) {
+        group = { date: item.due, items: [] };
+        groups.push(group);
+      }
+      group.items.push(item);
+    });
+
+    let running = opening;
+    let lowest = null;
+    let lowestDate = '';
+    let negativeDays = 0;
+    groups.forEach((group) => {
+      group.incoming = group.items.filter((item) => item.kind === 'in').reduce((acc, item) => acc + item.val, 0);
+      group.outgoing = group.items.filter((item) => item.kind === 'out').reduce((acc, item) => acc + item.val, 0);
+      running += group.incoming - group.outgoing;
+      group.balance = running;
+      if (lowest === null || running < lowest) {
+        lowest = running;
+        lowestDate = group.date;
+      }
+      if (running < 0) negativeDays += 1;
+    });
+    const worst = lowest === null ? opening : lowest;
+
+    const undatedIn = undated.filter((item) => item.kind === 'in').reduce((acc, item) => acc + item.val, 0);
+    const undatedOut = undated.filter((item) => item.kind === 'out').reduce((acc, item) => acc + item.val, 0);
+    const endingClass = running < 0 ? 'danger' : 'success';
+    const lowClass = worst < 0 ? 'danger' : 'success';
+
+    document.getElementById('cashKpis').innerHTML = `
+      <div class="kpi-card purple">
+        <div class="kpi-label">Saldo no início do mês</div>
+        <div class="kpi-value">${formatMoney(opening)}</div>
+        <div class="kpi-sub">Sobra acumulada dos meses anteriores</div>
+      </div>
+      <div class="kpi-card ${lowClass}">
+        <div class="kpi-label">Pior momento do mês</div>
+        <div class="kpi-value">${formatMoney(worst)}</div>
+        <div class="kpi-sub">${lowestDate ? formatLongDay(lowestDate) : 'Nenhum lançamento datado'}</div>
+      </div>
+      <div class="kpi-card ${endingClass}">
+        <div class="kpi-label">Saldo no fim do mês</div>
+        <div class="kpi-value">${formatMoney(running)}</div>
+        <div class="kpi-sub">${negativeDays ? `${negativeDays} dia${negativeDays > 1 ? 's' : ''} no negativo` : 'Nenhum dia ficou negativo'}</div>
+      </div>
+    `;
+
+    const warning = document.getElementById('cashWarning');
+    if (undatedIn || undatedOut) {
+      warning.innerHTML = `<div class="cash-note">Ainda fora do fluxo: ${formatMoney(undatedIn)} a receber e ${formatMoney(undatedOut)} a pagar. Defina a data para esses lançamentos entrarem no saldo do dia.</div>`;
+    } else if (!dated.length) {
+      warning.innerHTML = `<div class="cash-note">Escolha o dia de cada recebimento e de cada pagamento para ver se o caixa fica positivo.</div>`;
+    } else if (negativeDays) {
+      warning.innerHTML = `<div class="cash-note">Tem dia negativo. Mude a data de um pagamento para depois de um recebimento, ou antecipe uma entrada, até o saldo do dia ficar positivo.</div>`;
+    } else {
+      warning.innerHTML = `<div class="cash-note ok">O caixa fica positivo em todos os dias deste mês.</div>`;
+    }
+
+    const undatedBox = document.getElementById('cashUndated');
+    if (!undated.length) {
+      undatedBox.innerHTML = '';
+    } else {
+      undatedBox.innerHTML = `
+        <div class="card">
+          <div class="card-title"><span>Sem data prevista</span></div>
+          ${undated.map((item) => `
+            <div class="move ${item.paid ? 'paid' : ''}">
+              ${dueInput(item, min, max)}
+              <div class="move-main">
+                <strong>${esc(item.label)}</strong>
+                <span>${esc(item.meta)}</span>
+              </div>
+              <div class="move-val ${item.kind}">${item.kind === 'in' ? '+' : '−'} ${formatMoney(item.val)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    const timeline = document.getElementById('cashTimeline');
+    if (!groups.length) {
+      timeline.innerHTML = `<p class="empty-flow">Quando as datas estiverem preenchidas, cada dia mostra o que entra, o que sai e o saldo que sobra.</p>`;
+      return;
+    }
+
+    timeline.innerHTML = groups.map((group) => {
+      const negative = group.balance < 0;
+      return `
+        <article class="day-card ${negative ? 'neg' : 'pos'}">
+          <header class="day-head">
+            <div>
+              <div class="day-title">${esc(formatLongDay(group.date))}</div>
+              <div class="day-move">Entra ${formatMoney(group.incoming)} · Sai ${formatMoney(group.outgoing)}</div>
+            </div>
+            <div class="balance-pill ${negative ? 'neg' : 'pos'}">
+              <span>Saldo depois deste dia</span>
+              <strong>${formatMoney(group.balance)}</strong>
+              <em>${negative ? 'Negativo' : (group.balance === 0 ? 'No zero' : 'Positivo')}</em>
+            </div>
+          </header>
+          ${group.items.map((item) => `
+            <div class="move ${item.paid ? 'paid' : ''}">
+              ${dueInput(item, min, max)}
+              <div class="move-main">
+                <strong>${esc(item.label)}</strong>
+                <span>${esc(item.meta)}</span>
+              </div>
+              <div class="move-val ${item.kind}">${item.kind === 'in' ? '+' : '−'} ${formatMoney(item.val)}</div>
+            </div>
+          `).join('')}
+        </article>
+      `;
+    }).join('');
   }
 
   function getTotalIncome(m) {
@@ -593,10 +920,10 @@
       accumulated += (getTotalIncome(mKey) - getTotalExpenses(mKey));
     });
 
-    document.getElementById('kpiIncome').innerText = `R$ ${income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('kpiExpenses').innerText = `R$ ${expenses.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('kpiMonthBalance').innerText = `R$ ${monthBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('kpiAccumulated').innerText = `R$ ${accumulated.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('kpiIncome').innerText = formatMoney(income);
+    document.getElementById('kpiExpenses').innerText = formatMoney(expenses);
+    document.getElementById('kpiMonthBalance').innerText = formatMoney(monthBalance);
+    document.getElementById('kpiAccumulated').innerText = formatMoney(accumulated);
 
     // Barra de Progresso
     const savingsRatio = income > 0 ? (monthBalance / income) * 100 : 0;
@@ -634,12 +961,14 @@
     const container = document.getElementById('incomesContainer');
     container.innerHTML = '';
 
+    const bounds = monthBounds(m);
     (db[m].incomes || []).forEach((inc, idx) => {
       container.innerHTML += `
         <div class="income-item">
-          <input type="text" class="desc-input" value="${inc.desc}" placeholder="Fonte de receita" onchange="updateIncomeItem(${idx}, 'desc', this.value)">
-          <input type="text" class="parcela-input" value="${inc.parcela || '-'}" placeholder="Parcela (ex: 1/12)" title="Quantidade de parcelas" onchange="updateIncomeItem(${idx}, 'parcela', this.value)">
-          <input type="number" value="${inc.val}" placeholder="Valor (R$)" step="50" onchange="updateIncomeItem(${idx}, 'val', this.value)">
+          <input type="text" class="desc-input" value="${esc(inc.desc)}" placeholder="Fonte de receita" onchange="updateIncomeItem(${idx}, 'desc', this.value)">
+          <input type="text" class="parcela-input" value="${esc(inc.parcela || '-')}" placeholder="Parcela (ex: 1/12)" title="Quantidade de parcelas" onchange="updateIncomeItem(${idx}, 'parcela', this.value)">
+          <label class="due-field"><span>Receber em</span><input type="date" min="${bounds.min}" max="${bounds.max}" value="${esc(safeDate(inc.due))}" title="Recebimento previsto" onchange="updateIncomeItem(${idx}, 'due', this.value)"></label>
+          <input type="number" value="${Number(inc.val) || 0}" placeholder="Valor (R$)" step="50" onchange="updateIncomeItem(${idx}, 'val', this.value)">
           ${(db[m].incomes.length > 1) ? `<button class="btn btn-sm btn-danger" onclick="removeIncomeSource(${idx})">✕</button>` : ''}
         </div>
       `;
@@ -649,7 +978,7 @@
   function addIncomeSource() {
     const m = getMonth();
     if (!db[m].incomes) db[m].incomes = [];
-    db[m].incomes.push({ desc: "Nova Receita / Extra", val: 500, parcela: "-" });
+    db[m].incomes.push({ desc: "Nova Receita / Extra", val: 500, parcela: "-", due: "" });
     saveDB();
   }
 
@@ -679,7 +1008,7 @@
       let catHtml = `
         <div class="cat-block">
           <div class="cat-header">
-            <input type="text" value="${cat.label}" style="font-weight:700; border:none; background:transparent; font-size:15px; color:${cat.color || '#1a73e8'}; width:60%;" onchange="updateCategoryTitle(${cIdx}, this.value)">
+            <input type="text" value="${esc(cat.label)}" style="font-weight:700; border:none; background:transparent; font-size:15px; color:${cat.color || '#1a73e8'}; width:60%;" onchange="updateCategoryTitle(${cIdx}, this.value)">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-weight:700; color:${cat.color || '#1a73e8'};">R$ ${catTotal.toLocaleString('pt-BR')}</span>
               <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="addExpenseField(${cIdx})">+ Linha</button>
@@ -688,11 +1017,13 @@
           </div>
       `;
 
+      const bounds = monthBounds(m);
       cat.fields.forEach((f, fIdx) => {
         catHtml += `
           <div class="field-row">
-            <input type="text" class="desc-input" value="${f.label}" placeholder="Descrição do gasto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'label', this.value)">
-            <input type="text" class="parcela-input" value="${f.parcela || '-'}" placeholder="Parc. (1/12)" title="Nº da Parcela" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'parcela', this.value)">
+            <input type="text" class="desc-input" value="${esc(f.label)}" placeholder="Descrição do gasto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'label', this.value)">
+            <input type="text" class="parcela-input" value="${esc(f.parcela || '-')}" placeholder="Parc. (1/12)" title="Nº da Parcela" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'parcela', this.value)">
+            <label class="due-field"><span>Pagar em</span><input type="date" min="${bounds.min}" max="${bounds.max}" value="${esc(safeDate(f.due))}" title="Pagamento previsto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'due', this.value)"></label>
             <select class="status-select ${f.status === 'pago' ? 'status-pago' : 'status-pendente'}" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'status', this.value)">
               <option value="pendente" ${f.status === 'pendente' ? 'selected' : ''}>🟡 Pendente</option>
               <option value="pago" ${f.status === 'pago' ? 'selected' : ''}>🟢 Pago</option>
@@ -719,7 +1050,7 @@
       label: "Nova Categoria",
       color: randomColor,
       fields: [
-        { label: "Nova Despesa", val: 100, max: 2000, status: "pendente", parcela: "-" }
+        { label: "Nova Despesa", val: 100, max: 2000, status: "pendente", parcela: "-", due: "" }
       ]
     });
     saveDB();
@@ -740,7 +1071,7 @@
   function addExpenseField(cIdx) {
     const m = getMonth();
     db[m].categories[cIdx].fields.push({
-      label: "Nova Despesa", val: 100, max: 2000, status: "pendente", parcela: "-"
+      label: "Nova Despesa", val: 100, max: 2000, status: "pendente", parcela: "-", due: ""
     });
     saveDB();
   }
