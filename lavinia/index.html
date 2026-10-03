@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#fef6f9">
+    <title>Planejamento - Quarto Lavínia</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../quartos/quarto.css">
+</head>
+<body class="theme-lavinia" data-fb="quarto_lavinia" data-storage="quartoLaviniaV1" data-budget-notes="0" data-sort="1" data-bar="#f48fb1">
+<div class="container">
+    <header>
+        <div>
+            <h1 class="main-title">Planejamento do Quarto & Enxoval</h1>
+            <h2 class="subtitle">QUARTO LAVÍNIA</h2>
+            <nav class="room-switch" aria-label="Quartos">
+                <a href="../florenca/">Florença</a>
+                <a class="on" href="./">Lavínia</a>
+            </nav>
+        </div>
+        <div class="header-side">
+            <div class="save-hint">Itens pendentes sobem automaticamente. Toque para editar.</div>
+            <div class="cloud-status" id="cloudStatus">Carregando…</div>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="orcamento">Gestão de Orçamento</button>
+        <button type="button" class="tab-btn" data-tab="enxoval">Lista de Enxoval</button>
+    </div>
+
+    <div id="orcamento" class="tab-content active">
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <span class="kpi-title">Orçamento Total</span>
+                <span class="kpi-value" id="kpiTotal">R$ 0,00</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-title">Total Concluído</span>
+                <span class="kpi-value" id="kpiConcluido">R$ 0,00</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-title">Total Pendente</span>
+                <span class="kpi-value" id="kpiPendente">R$ 0,00</span>
+            </div>
+        </div>
+
+        <div class="budget-grid">
+            <div>
+                <div class="table-container">
+                    <table id="budgetTable">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Custos Fixos</th>
+                                <th>Fornecedor</th>
+                                <th class="col-notes">Observações</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="budgetBody"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="action-btn" data-action="add-budget">+ Adicionar item de orçamento</button>
+            </div>
+            <div class="charts-wrapper">
+                <div class="chart-card">
+                    <div class="chart-title">Evolução: concluído e pendente</div>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Participação no orçamento total (%)</div>
+                    <div class="chart-container-large">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="enxoval" class="tab-content">
+        <div class="filter-bar">
+            <input type="search" id="searchInput" placeholder="Buscar item no enxoval..." enterkeyhint="search">
+            <button type="button" class="action-btn" data-action="add-enxoval">+ Adicionar item ao enxoval</button>
+        </div>
+        <div class="enxoval-progress" id="enxovalProgress"></div>
+        <div class="table-container">
+            <table id="enxovalTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantidade</th>
+                        <th>Status</th>
+                        <th>Observações</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="enxovalBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script id="seed" type="application/json">
+{
+  "budget": [
+    {"desc": "Berço", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Cômoda", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Mesinha de Canto", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Poltrona", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Papel Parede", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Carrinho", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Kit Higiene", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Tapete", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Dossel", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Mobile", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Abajur", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Colchão", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Kit Berço", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Placa da porta", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"},
+    {"desc": "Lustre", "cost": "R$ 0,00", "supplier": "", "notes": "", "status": "pendente"}
+  ],
+  "enxoval": [
+    {"item": "Bodie manga curta RN", "qty": "5", "notes": "", "status": "pendente"},
+    {"item": "Bodie manga curta P", "qty": "6", "notes": "", "status": "pendente"},
+    {"item": "Bodie manga comprida RN", "qty": "4", "notes": "", "status": "pendente"},
+    {"item": "Bodie manga comprida P", "qty": "4", "notes": "", "status": "pendente"},
+    {"item": "Calça com pé RN", "qty": "2", "notes": "", "status": "pendente"},
+    {"item": "Calça com pé P", "qty": "4", "notes": "", "status": "pendente"},
+    {"item": "Calça sem pé RN", "qty": "3", "notes": "", "status": "pendente"},
+    {"item": "Calça sem pé P", "qty": "2", "notes": "", "status": "pendente"},
+    {"item": "Macacão RN", "qty": "4", "notes": "", "status": "pendente"},
+    {"item": "Macacão P", "qty": "5", "notes": "", "status": "pendente"},
+    {"item": "Pijamas RN", "qty": "-", "notes": "", "status": "pendente"},
+    {"item": "Pijamas P", "qty": "-", "notes": "", "status": "pendente"},
+    {"item": "Meias RN", "qty": "5", "notes": "", "status": "pendente"},
+    {"item": "Meias P", "qty": "5", "notes": "", "status": "pendente"},
+    {"item": "Luvas", "qty": "2/3", "notes": "", "status": "pendente"},
+    {"item": "Manta", "qty": "3", "notes": "", "status": "pendente"},
+    {"item": "Fralda grande", "qty": "6", "notes": "", "status": "pendente"},
+    {"item": "Fralda de boca", "qty": "6", "notes": "", "status": "pendente"},
+    {"item": "Toalha de banho", "qty": "2", "notes": "", "status": "pendente"},
+    {"item": "Toalha fralda", "qty": "2", "notes": "", "status": "pendente"},
+    {"item": "Lençóis com elástico", "qty": "3", "notes": "", "status": "pendente"},
+    {"item": "Protetor de Colchão", "qty": "1/2", "notes": "", "status": "pendente"},
+    {"item": "Touca", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Saída maternidade", "qty": "3", "notes": "", "status": "pendente"},
+    {"item": "Termômetro", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Escova/pente", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Cortador de unha", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Cotonete", "qty": "3", "notes": "", "status": "pendente"},
+    {"item": "Sabonete Líquido", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Shampoo", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Creme Anti Assadura", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Fraldas", "qty": "2", "notes": "", "status": "pendente"},
+    {"item": "Algodão para higiene", "qty": "5", "notes": "", "status": "pendente"},
+    {"item": "Álcool 70% Umbigo", "qty": "1", "notes": "", "status": "pendente"},
+    {"item": "Mochila maternidade", "qty": "1", "notes": "", "status": "pendente"}
+  ]
+}
+</script>
+<script src="../quartos/quarto.js"></script>
+</body>
+</html>
