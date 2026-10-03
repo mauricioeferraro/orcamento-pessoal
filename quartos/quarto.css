@@ -64,27 +64,6 @@ h2.subtitle {
     margin-top: 2px;
 }
 
-.room-switch { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-
-.room-switch a {
-    text-decoration: none;
-    color: #888;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: #fff;
-    min-height: 40px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.room-switch a.on {
-    background: var(--header-bg);
-    color: var(--subtitle);
-}
-
 .header-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; max-width: 100%; }
 
 .save-hint, .cloud-status {
