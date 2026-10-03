@@ -294,6 +294,7 @@
     }
 
     .chart-container { position: relative; height: 320px; }
+    .trend-chart { height: 340px; }
     .status-filter { display: flex; gap: 6px; flex-wrap: wrap; margin: -4px 0 14px; }
     .status-filter button {
       background: #fff;
@@ -383,6 +384,16 @@
       <div class="kpi-value" id="kpiAccumulated">R$ 0,00</div>
       <div class="kpi-sub">Acumulado de todos os meses</div>
     </div>
+    <div class="kpi-card success">
+      <div class="kpi-label">Total Pago</div>
+      <div class="kpi-value" id="kpiPaid">R$ 0,00</div>
+      <div class="kpi-sub">Contas já pagas neste mês</div>
+    </div>
+    <div class="kpi-card warning">
+      <div class="kpi-label">Total Pendente</div>
+      <div class="kpi-value" id="kpiPending">R$ 0,00</div>
+      <div class="kpi-sub">Contas que ainda faltam pagar</div>
+    </div>
   </div>
 
   <div class="summary-grid">
@@ -402,6 +413,13 @@
         <div class="card-title">Saúde do Orçamento</div>
         <p id="healthSummary" style="font-size: 13px; color: var(--text-muted); line-height: 1.6;"></p>
       </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Evolução de receitas, despesas e sobra</div>
+    <div class="chart-container trend-chart">
+      <canvas id="trendChart"></canvas>
+    </div>
   </div>
 
       <!-- Bloco de Receitas Dinâmicas -->
@@ -484,6 +502,7 @@
   const FB_URL = "https://amar-care-default-rtdb.firebaseio.com/orcamento_pessoal.json";
   let db = {};
   let chartInstance = null;
+  let trendChart = null;
   let pushTimer = null;
   let lastWrite = 0;
   let applyingRemote = false;
@@ -714,6 +733,7 @@
     renderIncomes();
     renderCategories();
     renderChart();
+    renderTrend();
   }
 
   function esc(value) {
@@ -965,9 +985,12 @@
       else totalPendente += Number(f.val || 0);
     }));
 
+    document.getElementById('kpiPaid').innerText = formatMoney(totalPago);
+    document.getElementById('kpiPending').innerText = formatMoney(totalPendente);
+
     document.getElementById('paymentStatusSummary').innerHTML = `
-      🟢 <strong>Total Pago:</strong> R$ ${totalPago.toLocaleString('pt-BR', {minimumFractionDigits: 2})}<br>
-      🟡 <strong>Total Pendente:</strong> R$ ${totalPendente.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+      🟢 <strong>Total Pago:</strong> ${formatMoney(totalPago)}<br>
+      🟡 <strong>Total Pendente:</strong> ${formatMoney(totalPendente)}
     `;
 
     document.getElementById('healthSummary').innerHTML = `
@@ -1249,6 +1272,52 @@
                   };
                 });
               }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderTrend() {
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const months = Object.keys(db).filter((key) => /^\d{4}-\d{2}$/.test(key)).sort();
+    const labels = months.map((key) => {
+      const [year, month] = key.split('-');
+      return `${monthNames[Number(month) - 1]}/${year.slice(2)}`;
+    });
+    const income = months.map((key) => getTotalIncome(key));
+    const expenses = months.map((key) => getTotalExpenses(key));
+    const balance = months.map((key, index) => income[index] - expenses[index]);
+    const canvas = document.getElementById('trendChart');
+    if (!canvas) return;
+    if (trendChart) trendChart.destroy();
+
+    trendChart = new Chart(canvas.getContext('2d'), {
+      data: {
+        labels,
+        datasets: [
+          { type: 'bar', label: 'Receitas', data: income, backgroundColor: '#107c41', borderRadius: 6 },
+          { type: 'bar', label: 'Despesas', data: expenses, backgroundColor: '#d93025', borderRadius: 6 },
+          { type: 'line', label: 'Sobra', data: balance, borderColor: '#e37400', backgroundColor: '#e37400', tension: 0.25, pointRadius: 4, borderWidth: 2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label(item) { return `${item.dataset.label}: ${formatMoney(item.parsed.y)}`; }
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback(value) { return Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 0 }); }
             }
           }
         }
