@@ -293,7 +293,20 @@
       transition: width 0.3s ease;
     }
 
-    .chart-container { position: relative; height: 260px; }
+    .chart-container { position: relative; height: 320px; }
+    .status-filter { display: flex; gap: 6px; flex-wrap: wrap; margin: -4px 0 14px; }
+    .status-filter button {
+      background: #fff;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .status-filter button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .field-row.is-paid { background: #f6fbf8; }
   </style>
 </head>
 <body>
@@ -416,6 +429,11 @@
           <button class="btn btn-sm" onclick="addNewCategory()">+ Nova Categoria</button>
         </div>
         <p class="section-hint">Informe o pagamento previsto de cada conta. Dá para ajustar o dia direto na aba Fluxo de caixa.</p>
+        <div class="status-filter" role="group" aria-label="Filtrar despesas">
+          <button type="button" id="filterTodos" class="active" onclick="setStatusFilter('todos')">Todos</button>
+          <button type="button" id="filterPendentes" onclick="setStatusFilter('pendentes')">Pendentes</button>
+          <button type="button" id="filterPagos" onclick="setStatusFilter('pagos')">Pagos</button>
+        </div>
         <div id="categoriesContainer">
           <!-- Renderizado Dinamicamente -->
         </div>
@@ -470,6 +488,11 @@
   let lastWrite = 0;
   let applyingRemote = false;
   let currentView = 'budget';
+  let statusFilter = 'todos';
+  const categoryPalette = [
+    '#1a73e8', '#e37400', '#107c41', '#a142f4', '#d93025', '#00897b',
+    '#c2185b', '#5f6368', '#f9ab00', '#7b1fa2', '#0277bd', '#558b2f'
+  ];
 
   // Lista completa de meses suportados (2026 e 2027)
   const allMonthsList = [
@@ -995,6 +1018,44 @@
     saveDB();
   }
 
+  function setStatusFilter(value) {
+    statusFilter = value === 'pendentes' || value === 'pagos' ? value : 'todos';
+    ['todos', 'pendentes', 'pagos'].forEach((key) => {
+      const button = document.getElementById(key === 'todos' ? 'filterTodos' : (key === 'pendentes' ? 'filterPendentes' : 'filterPagos'));
+      if (button) button.classList.toggle('active', statusFilter === key);
+    });
+    if (currentView === 'budget') {
+      renderCategories();
+      renderChart();
+    }
+  }
+
+  function resolvedCategoryColors(categories) {
+    const used = new Set();
+    return (categories || []).map((cat, index) => {
+      const stored = cat.color;
+      const duplicated = stored && categories.filter((other) => other.color === stored).length > 1;
+      let color = stored;
+      if (!color || duplicated || used.has(color)) {
+        color = categoryPalette.find((item) => !used.has(item)) || categoryPalette[index % categoryPalette.length];
+      }
+      used.add(color);
+      return color;
+    });
+  }
+
+  function visibleFields(fields) {
+    return (fields || [])
+      .map((field, fIdx) => ({ field, fIdx }))
+      .filter(({ field }) => {
+        const paid = field.status === 'pago';
+        if (statusFilter === 'pendentes') return !paid;
+        if (statusFilter === 'pagos') return paid;
+        return true;
+      })
+      .sort((a, b) => (a.field.status === 'pago' ? 1 : 0) - (b.field.status === 'pago' ? 1 : 0));
+  }
+
   /* --- CATEGORIAS & DESPESAS --- */
   function renderCategories() {
     const m = getMonth();
@@ -1002,31 +1063,38 @@
 
     const container = document.getElementById('categoriesContainer');
     container.innerHTML = '';
+    const colors = resolvedCategoryColors(data.categories);
+    const bounds = monthBounds(m);
+    let visibleCount = 0;
 
     data.categories.forEach((cat, cIdx) => {
-      let catTotal = cat.fields.reduce((acc, f) => acc + Number(f.val || 0), 0);
+      const rows = visibleFields(cat.fields);
+      if (!rows.length) return;
+      visibleCount += rows.length;
+      const catTotal = rows.reduce((acc, row) => acc + Number(row.field.val || 0), 0);
+      const color = colors[cIdx];
       let catHtml = `
         <div class="cat-block">
           <div class="cat-header">
-            <input type="text" value="${esc(cat.label)}" style="font-weight:700; border:none; background:transparent; font-size:15px; color:${cat.color || '#1a73e8'}; width:60%;" onchange="updateCategoryTitle(${cIdx}, this.value)">
+            <input type="text" value="${esc(cat.label)}" style="font-weight:700; border:none; background:transparent; font-size:15px; color:${color}; width:60%;" onchange="updateCategoryTitle(${cIdx}, this.value)">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-weight:700; color:${cat.color || '#1a73e8'};">R$ ${catTotal.toLocaleString('pt-BR')}</span>
+              <span style="font-weight:700; color:${color};">R$ ${catTotal.toLocaleString('pt-BR')}</span>
               <button class="btn btn-sm btn-outline" style="padding:2px 6px;" onclick="addExpenseField(${cIdx})">+ Linha</button>
               ${data.categories.length > 1 ? `<button class="btn btn-sm btn-danger" style="padding:2px 6px;" onclick="removeCategory(${cIdx})">✕</button>` : ''}
             </div>
           </div>
       `;
 
-      const bounds = monthBounds(m);
-      cat.fields.forEach((f, fIdx) => {
+      rows.forEach(({ field: f, fIdx }) => {
+        const paid = f.status === 'pago';
         catHtml += `
-          <div class="field-row">
+          <div class="field-row ${paid ? 'is-paid' : ''}">
             <input type="text" class="desc-input" value="${esc(f.label)}" placeholder="Descrição do gasto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'label', this.value)">
             <input type="text" class="parcela-input" value="${esc(f.parcela || '-')}" placeholder="Parc. (1/12)" title="Nº da Parcela" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'parcela', this.value)">
             <label class="due-field"><span>Pagar em</span><input type="date" min="${bounds.min}" max="${bounds.max}" value="${esc(safeDate(f.due))}" title="Pagamento previsto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'due', this.value)"></label>
-            <select class="status-select ${f.status === 'pago' ? 'status-pago' : 'status-pendente'}" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'status', this.value)">
-              <option value="pendente" ${f.status === 'pendente' ? 'selected' : ''}>🟡 Pendente</option>
-              <option value="pago" ${f.status === 'pago' ? 'selected' : ''}>🟢 Pago</option>
+            <select class="status-select ${paid ? 'status-pago' : 'status-pendente'}" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'status', this.value)">
+              <option value="pendente" ${!paid ? 'selected' : ''}>🟡 Pendente</option>
+              <option value="pago" ${paid ? 'selected' : ''}>🟢 Pago</option>
             </select>
             <input type="range" min="0" max="${f.max || 5000}" step="25" value="${f.val}" oninput="updateExpenseField(${cIdx}, ${fIdx}, 'val', this.value)">
             <input type="number" value="${f.val}" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'val', this.value)">
@@ -1038,12 +1106,16 @@
       catHtml += `</div>`;
       container.innerHTML += catHtml;
     });
+
+    if (!visibleCount) {
+      container.innerHTML = '<p class="section-hint">Nenhuma despesa nesse filtro.</p>';
+    }
   }
 
   function addNewCategory() {
     const m = getMonth();
-    const colors = ['#1a73e8', '#e37400', '#107c41', '#a142f4', '#d93025', '#00897b'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const used = new Set(resolvedCategoryColors(db[m].categories));
+    const randomColor = categoryPalette.find((item) => !used.has(item)) || categoryPalette[db[m].categories.length % categoryPalette.length];
     
     db[m].categories.push({
       key: "custom_" + Date.now(),
@@ -1093,30 +1165,93 @@
   }
 
   /* --- GRÁFICOS E BACKUP --- */
+  const categoryLabelPlugin = {
+    id: 'categoryLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(0);
+      const dataset = chart.data.datasets[0];
+      if (!dataset) return;
+      const total = dataset.data.reduce((acc, value) => acc + value, 0);
+      meta.data.forEach((arc, index) => {
+        const value = Number(dataset.data[index] || 0);
+        if (!total || value / total < 0.08) return;
+        const angle = (arc.startAngle + arc.endAngle) / 2;
+        const radius = (arc.innerRadius + arc.outerRadius) / 2;
+        const x = arc.x + Math.cos(angle) * radius;
+        const y = arc.y + Math.sin(angle) * radius;
+        const pct = Math.round((value / total) * 100);
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${pct}%`, x, y);
+        ctx.restore();
+      });
+    }
+  };
+
   function renderChart() {
     const m = getMonth();
     const data = db[m];
+    const colors = resolvedCategoryColors(data.categories);
+    const labels = [];
+    const values = [];
+    const sliceColors = [];
 
-    const labels = data.categories.map(c => c.label);
-    const values = data.categories.map(c => c.fields.reduce((a, f) => a + Number(f.val || 0), 0));
-    const colors = data.categories.map(c => c.color || '#1a73e8');
+    data.categories.forEach((cat, index) => {
+      const total = visibleFields(cat.fields).reduce((acc, row) => acc + Number(row.field.val || 0), 0);
+      if (total <= 0) return;
+      labels.push(cat.label);
+      values.push(total);
+      sliceColors.push(colors[index]);
+    });
 
     const ctx = document.getElementById('categoryChart').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 
     chartInstance = new Chart(ctx, {
       type: 'doughnut',
+      plugins: [categoryLabelPlugin],
       data: {
         labels: labels,
         datasets: [{
           data: values,
-          backgroundColor: colors
+          backgroundColor: sliceColors,
+          borderWidth: 2,
+          borderColor: '#ffffff'
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } }
+        layout: { padding: 8 },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              padding: 14,
+              generateLabels(chart) {
+                const rows = chart.data.labels || [];
+                const dataset = chart.data.datasets[0];
+                const total = dataset.data.reduce((acc, value) => acc + value, 0);
+                return rows.map((label, index) => {
+                  const pct = total ? Math.round((dataset.data[index] / total) * 100) : 0;
+                  return {
+                    text: `${label} · ${pct}%`,
+                    fillStyle: dataset.backgroundColor[index],
+                    strokeStyle: '#ffffff',
+                    lineWidth: 1,
+                    hidden: false,
+                    index
+                  };
+                });
+              }
+            }
+          }
+        }
       }
     });
   }
