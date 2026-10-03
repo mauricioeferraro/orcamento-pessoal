@@ -224,7 +224,9 @@
     .move-val { font-weight: 700; white-space: nowrap; }
     .move-val.in { color: var(--success); }
     .move-val.out { color: var(--danger); }
-    .move.paid { opacity: 0.72; }
+    .move .status-select { width: 124px; flex: 0 0 124px; font-weight: 600; font-size: 12px; }
+    .move.paid { background: #f6fbf8; }
+    .move.pending { background: #fffdf8; }
     .empty-flow { font-size: 13px; color: var(--text-muted); padding: 8px 0 4px; }
 
     /* Categorias e Sliders */
@@ -262,8 +264,8 @@
     .field-row .due-field { grid-area: due; }
     .field-row .due-field input { width: 100%; }
     .field-row select.status-select { grid-area: status; width: 100%; font-weight: 600; font-size: 12px; }
-    .field-row select.status-pago { color: var(--success); background-color: var(--success-light); border-color: #b7e1cd; }
-    .field-row select.status-pendente { color: var(--warning); background-color: var(--warning-light); border-color: #fce8b2; }
+    .field-row select.status-pago, .move select.status-pago { color: var(--success); background-color: var(--success-light); border-color: #b7e1cd; }
+    .field-row select.status-pendente, .move select.status-pendente { color: var(--warning); background-color: var(--warning-light); border-color: #fce8b2; }
     .field-row input[type="range"] { grid-area: range; width: 100%; accent-color: var(--primary); margin: 0; }
     .field-row input[type="number"] { grid-area: valor; width: 100%; text-align: right; font-weight: 600; }
     .field-row .btn-danger { grid-area: del; justify-self: end; }
@@ -802,7 +804,7 @@
         place({
           kind: 'out', cIdx, fIdx, due: field.due, val: Number(field.val || 0),
           label: field.label || 'Despesa',
-          meta: `${cat.label || 'Despesa'} · ${field.status === 'pago' ? 'Pago' : 'Pendente'}`,
+          meta: cat.label || 'Despesa',
           paid: field.status === 'pago'
         });
       });
@@ -817,6 +819,30 @@
       : `updateExpenseField(${item.cIdx}, ${item.fIdx}, 'due', this.value)`;
     const caption = item.kind === 'in' ? 'Receber em' : 'Pagar em';
     return `<label class="due-field"><span>${caption}</span><input type="date" min="${min}" max="${max}" value="${esc(safeDate(item.due))}" onchange="${handler}"></label>`;
+  }
+
+  function paymentStatusControl(item) {
+    if (item.kind !== 'out') return '';
+    const paid = !!item.paid;
+    return `<select class="status-select ${paid ? 'status-pago' : 'status-pendente'}" aria-label="Situação de ${esc(item.label)}" onchange="updateExpenseField(${item.cIdx}, ${item.fIdx}, 'status', this.value)">
+      <option value="pendente" ${paid ? '' : 'selected'}>🟡 Pendente</option>
+      <option value="pago" ${paid ? 'selected' : ''}>🟢 Pago</option>
+    </select>`;
+  }
+
+  function cashMoveRow(item, min, max) {
+    const situation = item.kind === 'out' ? (item.paid ? 'paid' : 'pending') : '';
+    return `
+      <div class="move ${situation}">
+        ${dueInput(item, min, max)}
+        <div class="move-main">
+          <strong>${esc(item.label)}</strong>
+          <span>${esc(item.meta)}</span>
+        </div>
+        ${paymentStatusControl(item)}
+        <div class="move-val ${item.kind}">${item.kind === 'in' ? '+' : '−'} ${formatMoney(item.val)}</div>
+      </div>
+    `;
   }
 
   function renderCashflow() {
@@ -892,16 +918,7 @@
       undatedBox.innerHTML = `
         <div class="card">
           <div class="card-title"><span>Sem data prevista</span></div>
-          ${undated.map((item) => `
-            <div class="move ${item.paid ? 'paid' : ''}">
-              ${dueInput(item, min, max)}
-              <div class="move-main">
-                <strong>${esc(item.label)}</strong>
-                <span>${esc(item.meta)}</span>
-              </div>
-              <div class="move-val ${item.kind}">${item.kind === 'in' ? '+' : '−'} ${formatMoney(item.val)}</div>
-            </div>
-          `).join('')}
+          ${undated.map((item) => cashMoveRow(item, min, max)).join('')}
         </div>
       `;
     }
@@ -914,12 +931,18 @@
 
     timeline.innerHTML = groups.map((group) => {
       const negative = group.balance < 0;
+      const pendingCount = group.items.filter((item) => item.kind === 'out' && !item.paid).length;
+      const paidCount = group.items.filter((item) => item.kind === 'out' && item.paid).length;
+      const situation = [
+        pendingCount ? `${pendingCount} pendente${pendingCount > 1 ? 's' : ''}` : '',
+        paidCount ? `${paidCount} pago${paidCount > 1 ? 's' : ''}` : ''
+      ].filter(Boolean).join(' · ');
       return `
         <article class="day-card ${negative ? 'neg' : 'pos'}">
           <header class="day-head">
             <div>
               <div class="day-title">${esc(formatLongDay(group.date))}</div>
-              <div class="day-move">Entra ${formatMoney(group.incoming)} · Sai ${formatMoney(group.outgoing)}</div>
+              <div class="day-move">Entra ${formatMoney(group.incoming)} · Sai ${formatMoney(group.outgoing)}${situation ? ` · ${situation}` : ''}</div>
             </div>
             <div class="balance-pill ${negative ? 'neg' : 'pos'}">
               <span>Saldo depois deste dia</span>
@@ -927,16 +950,7 @@
               <em>${negative ? 'Negativo' : (group.balance === 0 ? 'No zero' : 'Positivo')}</em>
             </div>
           </header>
-          ${group.items.map((item) => `
-            <div class="move ${item.paid ? 'paid' : ''}">
-              ${dueInput(item, min, max)}
-              <div class="move-main">
-                <strong>${esc(item.label)}</strong>
-                <span>${esc(item.meta)}</span>
-              </div>
-              <div class="move-val ${item.kind}">${item.kind === 'in' ? '+' : '−'} ${formatMoney(item.val)}</div>
-            </div>
-          `).join('')}
+          ${group.items.map((item) => cashMoveRow(item, min, max)).join('')}
         </article>
       `;
     }).join('');
