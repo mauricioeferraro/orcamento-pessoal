@@ -382,4 +382,113 @@ body[data-budget-notes="0"] #budgetTable .col-notes { display: none; }
     td[contenteditable="true"] { justify-content: flex-start; }
     .total-row { background: var(--total-bg); }
     .chart-container { height: 220px; }
+    td input[type="date"],
+    td input[type="number"] {
+        flex: 1 1 auto;
+        width: auto;
+        max-width: 62%;
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 761px) {
+    body[data-schedule="1"] #budgetTable,
+    #scheduleTable { min-width: 980px; }
+}
+
+td input[type="date"],
+td input[type="number"] {
+    border: 1px solid transparent;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 4px;
+    border-radius: 6px;
+}
+
+td input[type="number"] { width: 88px; }
+td input[type="date"] { width: 148px; }
+
+td input[type="date"]:focus,
+td input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+}
+
+.col-deadline { font-weight: 700; color: #333; }
+
+.schedule-head {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.schedule-deadline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.schedule-deadline input {
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+.schedule-help {
+    flex: 1 1 280px;
+    font-size: 0.88rem;
+    color: #666;
+    line-height: 1.45;
+}
+
+.schedule-item { font-weight: 600; }
+.schedule-supplier { font-size: 0.75rem; color: #888; margin-top: 2px; }
+.schedule-kpi-name { font-size: 1.05rem; }
+.kpi-sub { font-size: 0.85rem; color: #666; font-weight: 600; }
+.kpi-alert { color: #c62828; }
+
+.badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #f3f3f3;
+    color: #666;
+}
+.badge.late, .badge.plan-late { background: #fdecea; color: #c62828; }
+.badge.soon { background: #fff3cd; color: #856404; }
+.badge.ok { background: #d4edda; color: #155724; }
+.badge.missing, .badge.done { background: #f3f3f3; color: #777; }
+
+tr.schedule-late td { background: #fff8f8; }
+tr.schedule-soon td { background: #fffaf0; }
+tr.schedule-done { opacity: 0.7; }
+
+@media (max-width: 760px) {
+    .schedule-head { align-items: stretch; }
+    .schedule-deadline input { width: 100%; }
 }

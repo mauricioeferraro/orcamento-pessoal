@@ -8,9 +8,9 @@
     <title>Planejamento - Quarto Florença</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../quartos/quarto.css">
+    <link rel="stylesheet" href="../quartos/quarto.css?v=20261007">
 </head>
-<body class="theme-florenca" data-fb="quarto_florenca" data-storage="quartoFlorencaV1" data-budget-notes="1" data-sort="0" data-bar="#e88dad">
+<body class="theme-florenca" data-fb="quarto_florenca" data-storage="quartoFlorencaV1" data-budget-notes="1" data-sort="0" data-bar="#e88dad" data-schedule="1">
 <div class="container">
     <header>
         <div>
@@ -18,7 +18,7 @@
             <h2 class="subtitle">QUARTO FLORENÇA</h2>
         </div>
         <div class="header-side">
-            <div class="save-hint">Toque nas células para editar valores ou textos.</div>
+            <div class="save-hint">Toque para editar. O cronograma mostra até quando comprar.</div>
             <div class="cloud-status" id="cloudStatus">Carregando…</div>
         </div>
     </header>
@@ -26,6 +26,7 @@
     <div class="tabs">
         <button type="button" class="tab-btn active" data-tab="orcamento">Gestão de Orçamento</button>
         <button type="button" class="tab-btn" data-tab="enxoval">Lista de Enxoval</button>
+        <button type="button" class="tab-btn" data-tab="cronograma">Cronograma</button>
     </div>
 
     <div id="orcamento" class="tab-content active">
@@ -54,6 +55,8 @@
                                 <th>Custos Fixos</th>
                                 <th>Fornecedor</th>
                                 <th class="col-notes">Observações</th>
+                                <th>Data de compra estimada</th>
+                                <th>Prazo de entrega</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
@@ -98,6 +101,32 @@
                     </tr>
                 </thead>
                 <tbody id="enxovalBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="cronograma" class="tab-content">
+        <div class="schedule-head">
+            <label class="schedule-deadline">
+                <span>Precisa ter chegado até</span>
+                <input type="date" id="readyByInput">
+            </label>
+            <p class="schedule-help">Informe até quando os itens precisam estar em casa. O prazo é em dias corridos depois da compra. Comprar no máximo = essa data menos o prazo.</p>
+        </div>
+        <div class="kpi-container" id="scheduleKpis"></div>
+        <div class="table-container">
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Prazo de entrega</th>
+                        <th>Data de compra estimada</th>
+                        <th>Comprar no máximo</th>
+                        <th>Chegada estimada</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody"></tbody>
             </table>
         </div>
     </div>
@@ -160,6 +189,6 @@
   ]
 }
 </script>
-<script src="../quartos/quarto.js"></script>
+<script src="../quartos/quarto.js?v=20261007"></script>
 </body>
 </html>

@@ -5,10 +5,11 @@
     storageKey: body.dataset.storage,
     barColor: body.dataset.bar || "#e88dad",
     sortPending: body.dataset.sort === "1",
+    schedule: body.dataset.schedule === "1",
     seed: JSON.parse(document.getElementById("seed").textContent)
   };
 
-  let state = { budget: [], enxoval: [] };
+  let state = { budget: [], enxoval: [], readyBy: "" };
   let pushTimer = null;
   let lastWrite = 0;
   let applyingRemote = false;
@@ -52,7 +53,24 @@
   }
 
   function payload() {
-    return { updatedAt: Date.now(), budget: state.budget, enxoval: state.enxoval };
+    const doc = { updatedAt: Date.now(), budget: state.budget, enxoval: state.enxoval };
+    if (ROOM.schedule) doc.readyBy = state.readyBy || "";
+    return doc;
+  }
+
+  function readState(doc) {
+    return {
+      budget: Array.isArray(doc.budget) ? doc.budget : [],
+      enxoval: Array.isArray(doc.enxoval) ? doc.enxoval : [],
+      readyBy: typeof doc.readyBy === "string" ? doc.readyBy : ""
+    };
+  }
+
+  function isEditing() {
+    const el = document.activeElement;
+    if (!el) return false;
+    if (el.isContentEditable) return true;
+    return !!(el.closest && el.closest("input, textarea, select"));
   }
 
   function persistLocal(doc) {
@@ -95,10 +113,7 @@
     const remote = unwrap(doc);
     if (!remote) return;
     applyingRemote = true;
-    state = {
-      budget: Array.isArray(remote.budget) ? remote.budget : [],
-      enxoval: Array.isArray(remote.enxoval) ? remote.enxoval : []
-    };
+    state = readState(remote);
     lastWrite = doc.updatedAt || lastWrite;
     persistLocal(doc);
     render();
@@ -108,7 +123,7 @@
 
   async function pullFirebase() {
     if (pushTimer) return;
-    if (document.activeElement && document.activeElement.isContentEditable) return;
+    if (isEditing()) return;
     try {
       const doc = await fetch(ROOM.fbUrl, { cache: "no-store" }).then((response) => {
         if (!response.ok) throw new Error(String(response.status));
@@ -132,7 +147,7 @@
       }
       const doc = payloadData.data;
       if (!doc || doc.updatedAt === lastWrite || pushTimer) return;
-      if (document.activeElement && document.activeElement.isContentEditable) {
+      if (isEditing()) {
         pendingRemote = doc;
         return;
       }
@@ -145,6 +160,12 @@
     };
   }
 
+  function scheduleInputs(row) {
+    if (!ROOM.schedule) return "";
+    return `<td data-label="Data de compra estimada"><input type="date" data-field="purchaseDate" value="${esc(row.purchaseDate || "")}" aria-label="Data de compra estimada"></td>
+      <td data-label="Prazo de entrega"><input type="number" data-field="leadDays" min="0" step="1" inputmode="numeric" placeholder="dias" value="${esc(row.leadDays || "")}" aria-label="Prazo de entrega em dias"></td>`;
+  }
+
   function budgetRow(row, index) {
     const done = row.status === "concluido";
     return `<tr data-kind="budget" data-index="${index}">
@@ -152,6 +173,7 @@
       <td contenteditable="true" data-field="cost" data-label="Custo">${esc(row.cost)}</td>
       <td contenteditable="true" data-field="supplier" data-label="Fornecedor">${esc(row.supplier)}</td>
       <td class="col-notes" contenteditable="true" data-field="notes" data-label="Observações">${esc(row.notes)}</td>
+      ${scheduleInputs(row)}
       <td data-label="Status"><button type="button" class="status-btn ${done ? "concluido" : "pendente"}" data-action="status">${done ? "Concluído" : "Pendente"}</button></td>
       <td data-label="Ações"><button type="button" class="delete-row-btn" data-action="delete" aria-label="Excluir linha">×</button></td>
     </tr>`;
@@ -171,12 +193,14 @@
   function render() {
     const budgetBody = document.getElementById("budgetBody");
     const enxovalBody = document.getElementById("enxovalBody");
+    const scheduleGap = ROOM.schedule ? "<td></td><td></td>" : "";
     budgetBody.innerHTML = state.budget.map(budgetRow).join("") +
       `<tr class="total-row">
         <td data-label="Total">Orçamento total</td>
         <td id="totalSumCell" data-label="Soma"></td>
         <td></td>
         <td class="col-notes"></td>
+        ${scheduleGap}
         <td></td>
         <td></td>
       </tr>`;
@@ -232,6 +256,7 @@
       progress.textContent = labelCount(info.enxovalDone, "concluído", "concluídos") + " · " + labelCount(info.enxovalPending, "pendente", "pendentes");
     }
     updateCharts(info);
+    renderSchedule();
   }
 
   function barHeight(count) {
@@ -351,25 +376,26 @@
     });
   }
 
-  function fieldFromRow(kind, row, field) {
-    if (kind === "budget") {
-      if (field === "desc") return "desc";
-      if (field === "cost") return "cost";
-      if (field === "supplier") return "supplier";
-      return "notes";
-    }
-    if (field === "item") return "item";
-    if (field === "qty") return "qty";
-    return "notes";
+  function fieldFromRow(kind, field) {
+    const budgetFields = { desc: "desc", cost: "cost", supplier: "supplier", notes: "notes", leadDays: "leadDays", purchaseDate: "purchaseDate" };
+    const enxovalFields = { item: "item", qty: "qty", notes: "notes" };
+    const map = kind === "budget" ? budgetFields : enxovalFields;
+    return map[field] || null;
   }
 
   function onEdit(event) {
+    const input = event.target.closest("input[data-field]");
+    if (input) {
+      updateScheduleInput(input);
+      return;
+    }
     const td = event.target.closest("td[data-field]");
     const tr = event.target.closest("tr[data-index]");
     if (!td || !tr) return;
     const kind = tr.dataset.kind;
     const index = Number(tr.dataset.index);
-    const key = fieldFromRow(kind, state[kind][index], td.dataset.field);
+    const key = fieldFromRow(kind, td.dataset.field);
+    if (!key || !state[kind][index]) return;
     state[kind][index][key] = td.textContent;
     refreshNumbers();
     scheduleSave();
@@ -402,7 +428,12 @@
 
   function addRow(kind) {
     if (kind === "budget") {
-      state.budget.push({ desc: "Novo item", cost: "R$ 0,00", supplier: "", notes: "", status: "pendente" });
+      const row = { desc: "Novo item", cost: "R$ 0,00", supplier: "", notes: "", status: "pendente" };
+      if (ROOM.schedule) {
+        row.purchaseDate = "";
+        row.leadDays = "";
+      }
+      state.budget.push(row);
       if (ROOM.sortPending) state.budget = sortPending(state.budget);
     } else {
       state.enxoval.push({ item: "Novo item", qty: "1", notes: "", status: "pendente" });
@@ -466,16 +497,188 @@
     if (action.dataset.action === "delete") deleteRow(action.closest("tr"));
   }
 
+  function parseLead(value) {
+    if (value == null) return null;
+    const text = String(value).trim();
+    if (text === "") return null;
+    const n = Number(text);
+    if (!Number.isFinite(n) || n < 0) return null;
+    return Math.round(n);
+  }
+
+  function parseISODate(iso) {
+    const parts = String(iso || "").split("-").map(Number);
+    if (parts.length !== 3 || parts.some((n) => !n)) return null;
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function toISODate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
+
+  function shiftDays(iso, days) {
+    const date = parseISODate(iso);
+    if (!date) return "";
+    date.setDate(date.getDate() + days);
+    return toISODate(date);
+  }
+
+  function daysBetween(fromIso, toIso) {
+    const from = parseISODate(fromIso);
+    const to = parseISODate(toIso);
+    if (!from || !to) return null;
+    return Math.round((to - from) / 86400000);
+  }
+
+  function todayISO() {
+    const now = new Date();
+    return toISODate(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  }
+
+  function formatDateBR(iso) {
+    const date = parseISODate(iso);
+    if (!date) return "";
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    return d + "/" + m + "/" + date.getFullYear();
+  }
+
+  function dayLabel(n) {
+    const abs = Math.abs(n);
+    return abs + (abs === 1 ? " dia" : " dias");
+  }
+
+  function syncReadyByInput() {
+    const input = document.getElementById("readyByInput");
+    if (!input || document.activeElement === input) return;
+    input.value = state.readyBy || "";
+  }
+
+  function updateScheduleInput(input) {
+    const tr = input.closest("tr[data-index]");
+    if (!tr || tr.dataset.kind !== "budget") return;
+    const index = Number(tr.dataset.index);
+    const row = state.budget[index];
+    if (!row) return;
+    if (input.dataset.field === "leadDays") row.leadDays = input.value;
+    else if (input.dataset.field === "purchaseDate") row.purchaseDate = input.value;
+    else return;
+    document.querySelectorAll('tr[data-kind="budget"][data-index="' + index + '"] input[data-field="' + input.dataset.field + '"]').forEach((other) => {
+      if (other !== input) other.value = input.value;
+    });
+    renderSchedule();
+    scheduleSave();
+  }
+
+  function describeSituation(entry) {
+    if (entry.row.status === "concluido") return { kind: "done", label: "Concluído" };
+    if (!entry.ready) return { kind: "missing", label: "Defina a data limite" };
+    if (entry.lead == null) return { kind: "missing", label: "Informe o prazo" };
+    if (entry.daysLeft < 0) return { kind: "late", label: "Atrasado há " + dayLabel(entry.daysLeft) };
+    if (entry.planLate) return { kind: "plan-late", label: "Compra estimada não chega a tempo" };
+    if (entry.daysLeft === 0) return { kind: "soon", label: "Comprar hoje" };
+    if (entry.daysLeft <= 14) return { kind: "soon", label: "Faltam " + dayLabel(entry.daysLeft) };
+    if (entry.purchase) return { kind: "ok", label: "Chega a tempo" };
+    return { kind: "ok", label: "No prazo" };
+  }
+
+  function scheduleEntries() {
+    const today = todayISO();
+    const ready = parseISODate(state.readyBy) ? state.readyBy : "";
+    const kindOrder = { late: 0, "plan-late": 1, soon: 2, ok: 3, missing: 4, done: 5 };
+    return state.budget.map((row, index) => {
+      const lead = parseLead(row.leadDays);
+      const purchase = parseISODate(row.purchaseDate) ? row.purchaseDate : "";
+      const maxBuy = ready && lead != null ? shiftDays(ready, -lead) : "";
+      const arrival = purchase && lead != null ? shiftDays(purchase, lead) : "";
+      const daysLeft = maxBuy ? daysBetween(today, maxBuy) : null;
+      const planLate = !!(purchase && maxBuy && purchase > maxBuy);
+      const entry = { row, index, lead, purchase, ready, maxBuy, arrival, daysLeft, planLate };
+      entry.situation = describeSituation(entry);
+      return entry;
+    }).sort((a, b) => {
+      const rank = kindOrder[a.situation.kind] - kindOrder[b.situation.kind];
+      if (rank) return rank;
+      if (a.maxBuy && b.maxBuy && a.maxBuy !== b.maxBuy) return a.maxBuy < b.maxBuy ? -1 : 1;
+      return (a.row.desc || "").localeCompare(b.row.desc || "", "pt-BR");
+    });
+  }
+
+  function scheduleRowHtml(entry) {
+    const name = (entry.row.desc || "").trim() || "(sem descrição)";
+    const supplier = (entry.row.supplier || "").trim();
+    const leadValue = entry.row.leadDays == null ? "" : entry.row.leadDays;
+    return `<tr class="schedule-${esc(entry.situation.kind)}" data-kind="budget" data-index="${entry.index}">
+      <td data-label="Item"><div class="schedule-item">${esc(name)}</div>${supplier ? `<div class="schedule-supplier">${esc(supplier)}</div>` : ""}</td>
+      <td data-label="Prazo de entrega"><input type="number" data-field="leadDays" min="0" step="1" inputmode="numeric" placeholder="dias" value="${esc(leadValue)}" aria-label="Prazo de entrega em dias"></td>
+      <td data-label="Data de compra estimada"><input type="date" data-field="purchaseDate" value="${esc(entry.purchase)}" aria-label="Data de compra estimada"></td>
+      <td class="col-deadline" data-label="Comprar no máximo" data-computed="maxBuy">${entry.maxBuy ? esc(formatDateBR(entry.maxBuy)) : "—"}</td>
+      <td data-label="Chegada estimada" data-computed="arrival">${entry.arrival ? esc(formatDateBR(entry.arrival)) : "—"}</td>
+      <td data-label="Situação" data-computed="situation"><span class="badge ${esc(entry.situation.kind)}">${esc(entry.situation.label)}</span></td>
+    </tr>`;
+  }
+
+  function fillScheduleComputed(tr) {
+    const index = Number(tr.dataset.index);
+    const entry = scheduleEntries().find((item) => item.index === index);
+    if (!entry) return;
+    tr.className = "schedule-" + entry.situation.kind;
+    const maxCell = tr.querySelector('[data-computed="maxBuy"]');
+    const arrivalCell = tr.querySelector('[data-computed="arrival"]');
+    const situationCell = tr.querySelector('[data-computed="situation"]');
+    if (maxCell) maxCell.textContent = entry.maxBuy ? formatDateBR(entry.maxBuy) : "—";
+    if (arrivalCell) arrivalCell.textContent = entry.arrival ? formatDateBR(entry.arrival) : "—";
+    if (situationCell) situationCell.innerHTML = `<span class="badge ${esc(entry.situation.kind)}">${esc(entry.situation.label)}</span>`;
+  }
+
+  function renderScheduleKpis() {
+    const box = document.getElementById("scheduleKpis");
+    if (!box) return;
+    const open = scheduleEntries().filter((entry) => entry.row.status !== "concluido");
+    const urgent = open.filter((entry) => entry.maxBuy).slice().sort((a, b) => a.maxBuy < b.maxBuy ? -1 : 1)[0];
+    const attention = open.filter((entry) => entry.situation.kind === "late" || entry.situation.kind === "plan-late").length;
+    const missing = open.filter((entry) => entry.situation.kind === "missing").length;
+    const first = urgent
+      ? `<span class="kpi-value schedule-kpi-name">${esc((urgent.row.desc || "").trim() || "(sem descrição)")}</span><span class="kpi-sub">comprar até ${esc(formatDateBR(urgent.maxBuy))}</span>`
+      : `<span class="kpi-value schedule-kpi-name">—</span><span class="kpi-sub">${state.readyBy ? "Informe o prazo dos itens" : "Defina até quando precisa chegar"}</span>`;
+    box.innerHTML = `
+      <div class="kpi-card"><span class="kpi-title">Comprar primeiro</span>${first}</div>
+      <div class="kpi-card"><span class="kpi-title">Fora do prazo</span><span class="kpi-value kpi-alert">${attention}</span></div>
+      <div class="kpi-card"><span class="kpi-title">Sem prazo</span><span class="kpi-value">${missing}</span></div>
+    `;
+  }
+
+  function renderSchedule(force) {
+    const bodyEl = document.getElementById("scheduleBody");
+    if (!bodyEl || !ROOM.schedule) return;
+    syncReadyByInput();
+    const editing = bodyEl.contains(document.activeElement);
+    if (editing && !force) {
+      const tr = document.activeElement.closest("tr");
+      if (tr) fillScheduleComputed(tr);
+      renderScheduleKpis();
+      return;
+    }
+    const entries = scheduleEntries();
+    bodyEl.innerHTML = entries.length
+      ? entries.map(scheduleRowHtml).join("")
+      : `<tr><td colspan="6">Nenhum item no orçamento.</td></tr>`;
+    renderScheduleKpis();
+  }
+
   async function boot() {
     setCloudStatus("Carregando…");
-    state = clone(ROOM.seed);
+    state = readState(clone(ROOM.seed));
     try {
       const local = JSON.parse(localStorage.getItem(ROOM.storageKey) || "null");
       if (local && (Array.isArray(local.budget) || Array.isArray(local.enxoval))) {
-        state = { budget: local.budget || [], enxoval: local.enxoval || [] };
+        state = readState(local);
       }
     } catch (error) {
-      state = clone(ROOM.seed);
+      state = readState(clone(ROOM.seed));
     }
     render();
     try {
@@ -497,13 +700,29 @@
 
   document.getElementById("budgetTable").addEventListener("input", onEdit);
   document.getElementById("enxovalTable").addEventListener("input", onEdit);
+  const scheduleTable = document.getElementById("scheduleTable");
+  if (scheduleTable) {
+    scheduleTable.addEventListener("input", (event) => {
+      const input = event.target.closest("input[data-field]");
+      if (input) updateScheduleInput(input);
+    });
+    scheduleTable.addEventListener("change", () => renderSchedule(true));
+  }
+  const readyInput = document.getElementById("readyByInput");
+  if (readyInput) {
+    readyInput.addEventListener("input", () => {
+      state.readyBy = readyInput.value;
+      renderSchedule(true);
+      scheduleSave();
+    });
+  }
   document.getElementById("budgetTable").addEventListener("focusout", onCostBlur);
   document.getElementById("searchInput").addEventListener("input", applyFilter);
   document.body.addEventListener("click", onClick);
   document.addEventListener("focusout", () => {
     setTimeout(() => {
       if (!pendingRemote) return;
-      if (document.activeElement && document.activeElement.isContentEditable) return;
+      if (isEditing()) return;
       const doc = pendingRemote;
       pendingRemote = null;
       applyRemote(doc);
