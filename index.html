@@ -334,7 +334,7 @@
           <option value="2026-07">Julho / 2026</option>
           <option value="2026-08">Agosto / 2026</option>
           <option value="2026-09">Setembro / 2026</option>
-          <option value="2026-10" selected>Outubro / 2026</option>
+          <option value="2026-10">Outubro / 2026</option>
           <option value="2026-11">Novembro / 2026</option>
           <option value="2026-12">Dezembro / 2026</option>
         </optgroup>
@@ -521,7 +521,25 @@
     "2027-01", "2027-02", "2027-03", "2027-04", "2027-05", "2027-06", "2027-07", "2027-08", "2027-09", "2027-10", "2027-11", "2027-12"
   ];
 
+  const MONTH_KEY = "financesFullCustomMonth";
+
   function getMonth() { return document.getElementById('monthSelect').value; }
+
+  function hasMonthOption(monthKey) {
+    return Array.from(document.getElementById('monthSelect').options).some((option) => option.value === monthKey);
+  }
+
+  function currentMonthKey() {
+    const now = new Date();
+    const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return hasMonthOption(key) ? key : "";
+  }
+
+  function restoreMonth() {
+    const saved = localStorage.getItem(MONTH_KEY) || "";
+    const monthKey = hasMonthOption(saved) ? saved : currentMonthKey();
+    if (monthKey) document.getElementById('monthSelect').value = monthKey;
+  }
 
   // Função para avançar o texto de uma parcela (ex: "2/6" -> "3/6" ou finaliza se era "6/6")
   function advanceParcelStr(parcelaStr) {
@@ -710,6 +728,7 @@
   }
 
   async function boot() {
+    restoreMonth();
     setCloudStatus("Carregando orçamento…");
     let seed = {};
     try {
@@ -764,6 +783,7 @@
   }
 
   function switchMonth() {
+    localStorage.setItem(MONTH_KEY, getMonth());
     initMonthData(getMonth());
     renderAll();
   }
