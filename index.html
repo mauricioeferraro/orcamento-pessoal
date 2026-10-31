@@ -629,12 +629,32 @@
     }
   }
 
+  const STORAGE_KEY = "financesFullCustomDB";
+
+  function readStored() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function hasMonthData(months) {
+    return !!(months && Object.keys(months).some((key) => /^\d{4}-\d{2}$/.test(key)));
+  }
+
+  function writeStored(updatedAt) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ updatedAt, data: db }));
+  }
+
   function saveDB() {
-    localStorage.setItem('financesFullCustomDB', JSON.stringify(db));
+    const updatedAt = Date.now();
+    lastWrite = updatedAt;
+    writeStored(updatedAt);
     renderAll();
     if (applyingRemote) return;
     clearTimeout(pushTimer);
-    pushTimer = setTimeout(pushFirebase, 400);
+    pushTimer = setTimeout(() => pushFirebase(updatedAt), 400);
   }
 
   function setCloudStatus(text) {
@@ -642,9 +662,8 @@
     if (el) el.textContent = text;
   }
 
-  async function pushFirebase() {
+  async function pushFirebase(updatedAt) {
     pushTimer = null;
-    const updatedAt = Date.now();
     lastWrite = updatedAt;
     try {
       const response = await fetch(FB_URL, {
@@ -655,7 +674,7 @@
       if (!response.ok) throw new Error(String(response.status));
       setCloudStatus("Salvo no Firebase");
     } catch (error) {
-      setCloudStatus("Guardado neste navegador. O Firebase não aceitou a gravação.");
+      setCloudStatus("Salvo neste navegador. O Firebase não aceitou a gravação.");
     }
   }
 
@@ -665,11 +684,13 @@
       const payload = JSON.parse(event.data);
       if (payload.path !== "/") return;
       const doc = payload.data;
-      if (!doc || doc.updatedAt === lastWrite || pushTimer) return;
+      if (!doc || pushTimer) return;
+      if (typeof doc.updatedAt === "number" && doc.updatedAt <= lastWrite) return;
       const next = doc.data && typeof doc.data === "object" ? doc.data : null;
-      if (!next) return;
+      if (!hasMonthData(next)) return;
       db = next;
-      localStorage.setItem('financesFullCustomDB', JSON.stringify(db));
+      lastWrite = doc.updatedAt || Date.now();
+      writeStored(lastWrite);
       applyingRemote = true;
       renderAll();
       applyingRemote = false;
@@ -690,21 +711,54 @@
 
   async function boot() {
     setCloudStatus("Carregando orçamento…");
+    let seed = {};
     try {
-      db = await fetch("data/orcamento.json").then((response) => response.json());
+      const response = await fetch("data/orcamento.json", { cache: "no-store" });
+      if (!response.ok) throw new Error(String(response.status));
+      const file = await response.json();
+      if (hasMonthData(file)) seed = file;
     } catch (error) {
-      db = JSON.parse(localStorage.getItem('financesFullCustomDB') || "null") || {};
+      seed = {};
     }
+
+    const stored = readStored();
+    const localMonths = monthsFrom(stored);
+    let localAt = stored && typeof stored.updatedAt === "number" ? stored.updatedAt : 0;
+    if (hasMonthData(localMonths)) {
+      db = localMonths;
+      if (!localAt) {
+        localAt = Date.now();
+        writeStored(localAt);
+      }
+    } else {
+      db = seed;
+    }
+
     try {
-      const remote = monthsFrom(await fetch(FB_URL).then((response) => {
-        if (!response.ok) throw new Error(String(response.status));
-        return response.json();
-      }));
-      if (remote) db = remote;
-      setCloudStatus("Ligado ao Firebase");
+      const response = await fetch(FB_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(String(response.status));
+      const body = await response.json();
+      const remote = monthsFrom(body);
+      const remoteAt = body && typeof body.updatedAt === "number" ? body.updatedAt : 0;
+      if (hasMonthData(remote) && remoteAt > localAt) {
+        db = remote;
+        lastWrite = remoteAt;
+        writeStored(remoteAt);
+        setCloudStatus("Ligado ao Firebase");
+      } else if (hasMonthData(localMonths)) {
+        setCloudStatus("Salvo neste navegador");
+        if (localAt > remoteAt) {
+          clearTimeout(pushTimer);
+          pushTimer = setTimeout(() => pushFirebase(localAt), 400);
+        }
+      } else {
+        setCloudStatus("Ligado ao Firebase");
+      }
       listenFirebase();
     } catch (error) {
-      setCloudStatus("Sem leitura no Firebase. Mostrando a cópia local.");
+      setCloudStatus(hasMonthData(localMonths)
+        ? "Salvo neste navegador"
+        : "Sem leitura no Firebase. Mostrando o arquivo inicial.");
     }
     switchMonth();
   }
