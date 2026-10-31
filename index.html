@@ -146,6 +146,31 @@
     .income-item input[type="text"].desc-input { flex: 2; min-width: 140px; }
     .income-item input[type="text"].parcela-input { width: 80px; text-align: center; }
     .income-item input[type="number"] { width: 110px; text-align: right; font-weight: 600; }
+    .income-item.is-selected, .move.is-selected { background: var(--primary-light); border-radius: 8px; }
+
+    .line-pick { display: flex; align-items: center; justify-content: center; margin: 0; cursor: pointer; }
+    .line-pick input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+    .selection-summary:not([hidden]) {
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: #fff;
+      border: 1px solid #c6dafc;
+      border-left: 5px solid var(--primary);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+    .selection-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--primary); }
+    .selection-detail { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .selection-total { font-size: 22px; font-weight: 700; color: var(--text); }
 
     .due-field { display: flex; flex-direction: column; gap: 2px; }
     .due-field span { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.02em; }
@@ -247,10 +272,10 @@
     }
     .field-row {
       display: grid;
-      grid-template-columns: minmax(160px, 1.5fr) 76px minmax(142px, 168px) 118px 104px 36px;
+      grid-template-columns: 28px minmax(160px, 1.5fr) 76px minmax(142px, 168px) 118px 104px 36px;
       grid-template-areas:
-        "desc parcela due status valor del"
-        "range range range range range range";
+        "pick desc parcela due status valor del"
+        "range range range range range range range";
       gap: 8px;
       align-items: end;
       margin-bottom: 12px;
@@ -259,6 +284,8 @@
       border-radius: 8px;
       border: 1px solid #ebebeb;
     }
+    .field-row.is-selected { background: var(--primary-light); border-color: #c6dafc; }
+    .field-row .line-pick { grid-area: pick; height: 36px; }
     .field-row input[type="text"].desc-input { grid-area: desc; min-width: 0; width: 100%; font-weight: 500; }
     .field-row input[type="text"].parcela-input { grid-area: parcela; width: 100%; text-align: center; font-size: 12px; }
     .field-row .due-field { grid-area: due; }
@@ -271,12 +298,12 @@
     .field-row .btn-danger { grid-area: del; justify-self: end; }
     @media (max-width: 760px) {
       .field-row {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 28px 1fr 1fr;
         grid-template-areas:
-          "desc desc"
-          "parcela due"
-          "status valor"
-          "range del";
+          "pick desc desc"
+          "parcela parcela due"
+          "status valor del"
+          "range range range";
       }
     }
 
@@ -363,6 +390,15 @@
     <button type="button" id="tabCash" class="tab" onclick="setView('cashflow')">Fluxo de caixa</button>
   </nav>
 
+  <div id="selectionSummary" class="selection-summary" hidden>
+    <div>
+      <div class="selection-kicker">Linhas selecionadas</div>
+      <div class="selection-detail" id="selectionDetail"></div>
+    </div>
+    <div class="selection-total" id="selectionTotal">R$ 0,00</div>
+    <button type="button" class="btn btn-sm btn-outline" onclick="clearSelection()">Limpar seleção</button>
+  </div>
+
   <div id="viewBudget">
   <!-- Indicadores Principais (KPIs) -->
   <div class="kpi-grid">
@@ -431,7 +467,7 @@
           <button class="btn btn-sm" onclick="addIncomeSource()">+ Nova Renda</button>
         </div>
         
-        <p class="section-hint">Informe o dia em que cada valor cai na conta. O fluxo de caixa usa essa data.</p>
+        <p class="section-hint">Marque as linhas para somar o valor no topo. Informe o dia em que cada valor cai na conta.</p>
         <div id="incomesContainer">
           <!-- Renderizado Dinamicamente -->
         </div>
@@ -448,7 +484,7 @@
           <span>Categorias & Despesas</span>
           <button class="btn btn-sm" onclick="addNewCategory()">+ Nova Categoria</button>
         </div>
-        <p class="section-hint">Informe o pagamento previsto de cada conta. Dá para ajustar o dia direto na aba Fluxo de caixa.</p>
+        <p class="section-hint">Marque as linhas para somar o valor no topo. A caixinha da categoria marca todas as linhas visíveis.</p>
         <div class="status-filter" role="group" aria-label="Filtrar despesas">
           <button type="button" id="filterTodos" class="active" onclick="setStatusFilter('todos')">Todos</button>
           <button type="button" id="filterPendentes" onclick="setStatusFilter('pendentes')">Pendentes</button>
@@ -510,6 +546,8 @@
   let applyingRemote = false;
   let currentView = 'budget';
   let statusFilter = 'todos';
+  let selectedLines = new Set();
+  let selectionMonth = "";
   const categoryPalette = [
     '#1a73e8', '#e37400', '#107c41', '#a142f4', '#d93025', '#00897b',
     '#c2185b', '#5f6368', '#f9ab00', '#7b1fa2', '#0277bd', '#558b2f'
@@ -783,8 +821,11 @@
   }
 
   function switchMonth() {
-    localStorage.setItem(MONTH_KEY, getMonth());
-    initMonthData(getMonth());
+    const month = getMonth();
+    if (selectionMonth && selectionMonth !== month) selectedLines.clear();
+    selectionMonth = month;
+    localStorage.setItem(MONTH_KEY, month);
+    initMonthData(month);
     renderAll();
   }
 
@@ -800,6 +841,7 @@
   function renderAll() {
     const m = getMonth();
     initMonthData(m);
+    renderSelectionSummary();
 
     if (currentView === 'cashflow') {
       renderCashflow();
@@ -840,6 +882,98 @@
     const amount = Number(value) || 0;
     const abs = Math.abs(amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `${amount < 0 ? '− ' : ''}R$ ${abs}`;
+  }
+
+  function lineKey(kind, a, b) {
+    return kind === "in" ? `in:${a}` : `out:${a}:${b}`;
+  }
+
+  function linePick(key, label) {
+    const checked = selectedLines.has(key) ? "checked" : "";
+    return `<label class="line-pick"><input type="checkbox" aria-label="Selecionar ${esc(label)}" ${checked} onchange="toggleLine('${key}', this.checked)"></label>`;
+  }
+
+  function toggleLine(key, checked) {
+    const month = getMonth();
+    if (selectionMonth !== month) {
+      selectedLines.clear();
+      selectionMonth = month;
+    }
+    if (checked) selectedLines.add(key);
+    else selectedLines.delete(key);
+    document.querySelectorAll(`[data-line-key="${key}"]`).forEach((row) => {
+      row.classList.toggle("is-selected", checked);
+    });
+    renderSelectionSummary();
+  }
+
+  function toggleCategory(cIdx, checked) {
+    const month = getMonth();
+    if (selectionMonth !== month) {
+      selectedLines.clear();
+      selectionMonth = month;
+    }
+    visibleFields(db[month].categories[cIdx].fields).forEach(({ fIdx }) => {
+      const key = lineKey("out", cIdx, fIdx);
+      if (checked) selectedLines.add(key);
+      else selectedLines.delete(key);
+    });
+    renderAll();
+  }
+
+  function clearSelection() {
+    selectedLines.clear();
+    renderAll();
+  }
+
+  function selectionSnapshot() {
+    const month = getMonth();
+    if (selectionMonth !== month) {
+      selectedLines.clear();
+      selectionMonth = month;
+    }
+    let income = 0;
+    let expense = 0;
+    let incomeCount = 0;
+    let expenseCount = 0;
+    const alive = new Set();
+    (db[month]?.incomes || []).forEach((inc, idx) => {
+      const key = lineKey("in", idx);
+      alive.add(key);
+      if (!selectedLines.has(key)) return;
+      income += Number(inc.val) || 0;
+      incomeCount += 1;
+    });
+    (db[month]?.categories || []).forEach((cat, cIdx) => {
+      (cat.fields || []).forEach((field, fIdx) => {
+        const key = lineKey("out", cIdx, fIdx);
+        alive.add(key);
+        if (!selectedLines.has(key)) return;
+        expense += Number(field.val) || 0;
+        expenseCount += 1;
+      });
+    });
+    selectedLines.forEach((key) => {
+      if (!alive.has(key)) selectedLines.delete(key);
+    });
+    return {
+      income, expense, incomeCount, expenseCount,
+      count: incomeCount + expenseCount,
+      total: income + expense
+    };
+  }
+
+  function renderSelectionSummary() {
+    const box = document.getElementById("selectionSummary");
+    if (!box || !db[getMonth()]) return;
+    const snap = selectionSnapshot();
+    box.hidden = snap.count === 0;
+    if (!snap.count) return;
+    const parts = [`${snap.count} linha${snap.count > 1 ? "s" : ""}`];
+    if (snap.incomeCount) parts.push(`${snap.incomeCount} receita${snap.incomeCount > 1 ? "s" : ""} ${formatMoney(snap.income)}`);
+    if (snap.expenseCount) parts.push(`${snap.expenseCount} despesa${snap.expenseCount > 1 ? "s" : ""} ${formatMoney(snap.expense)}`);
+    document.getElementById("selectionDetail").textContent = parts.join(" · ");
+    document.getElementById("selectionTotal").textContent = formatMoney(snap.total);
   }
 
   function formatLongDay(iso) {
@@ -905,9 +1039,12 @@
   }
 
   function cashMoveRow(item, min, max) {
+    const key = item.kind === "in" ? lineKey("in", item.idx) : lineKey("out", item.cIdx, item.fIdx);
     const situation = item.kind === 'out' ? (item.paid ? 'paid' : 'pending') : '';
+    const selected = selectedLines.has(key) ? "is-selected" : "";
     return `
-      <div class="move ${situation}">
+      <div class="move ${situation} ${selected}" data-line-key="${key}">
+        ${linePick(key, item.label)}
         ${dueInput(item, min, max)}
         <div class="move-main">
           <strong>${esc(item.label)}</strong>
@@ -1097,8 +1234,11 @@
 
     const bounds = monthBounds(m);
     (db[m].incomes || []).forEach((inc, idx) => {
+      const key = lineKey("in", idx);
+      const selected = selectedLines.has(key) ? "is-selected" : "";
       container.innerHTML += `
-        <div class="income-item">
+        <div class="income-item ${selected}" data-line-key="${key}">
+          ${linePick(key, inc.desc || "Receita")}
           <input type="text" class="desc-input" value="${esc(inc.desc)}" placeholder="Fonte de receita" onchange="updateIncomeItem(${idx}, 'desc', this.value)">
           <input type="text" class="parcela-input" value="${esc(inc.parcela || '-')}" placeholder="Parcela (ex: 1/12)" title="Quantidade de parcelas" onchange="updateIncomeItem(${idx}, 'parcela', this.value)">
           <label class="due-field"><span>Receber em</span><input type="date" min="${bounds.min}" max="${bounds.max}" value="${esc(safeDate(inc.due))}" title="Recebimento previsto" onchange="updateIncomeItem(${idx}, 'due', this.value)"></label>
@@ -1187,6 +1327,9 @@
       let catHtml = `
         <div class="cat-block">
           <div class="cat-header">
+            <label class="line-pick" title="Selecionar as linhas visíveis desta categoria">
+              <input type="checkbox" data-cat-pick="${cIdx}" aria-label="Selecionar ${esc(cat.label)}" onchange="toggleCategory(${cIdx}, this.checked)">
+            </label>
             <input type="text" value="${esc(cat.label)}" style="font-weight:700; border:none; background:transparent; font-size:15px; color:${color}; width:60%;" onchange="updateCategoryTitle(${cIdx}, this.value)">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-weight:700; color:${color};">R$ ${catTotal.toLocaleString('pt-BR')}</span>
@@ -1198,8 +1341,11 @@
 
       rows.forEach(({ field: f, fIdx }) => {
         const paid = f.status === 'pago';
+        const key = lineKey("out", cIdx, fIdx);
+        const selected = selectedLines.has(key) ? "is-selected" : "";
         catHtml += `
-          <div class="field-row ${paid ? 'is-paid' : ''}">
+          <div class="field-row ${paid ? 'is-paid' : ''} ${selected}" data-line-key="${key}">
+            ${linePick(key, f.label || "Despesa")}
             <input type="text" class="desc-input" value="${esc(f.label)}" placeholder="Descrição do gasto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'label', this.value)">
             <input type="text" class="parcela-input" value="${esc(f.parcela || '-')}" placeholder="Parc. (1/12)" title="Nº da Parcela" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'parcela', this.value)">
             <label class="due-field"><span>Pagar em</span><input type="date" min="${bounds.min}" max="${bounds.max}" value="${esc(safeDate(f.due))}" title="Pagamento previsto" onchange="updateExpenseField(${cIdx}, ${fIdx}, 'due', this.value)"></label>
@@ -1221,6 +1367,13 @@
     if (!visibleCount) {
       container.innerHTML = '<p class="section-hint">Nenhuma despesa nesse filtro.</p>';
     }
+    container.querySelectorAll("[data-cat-pick]").forEach((input) => {
+      const cIdx = Number(input.dataset.catPick);
+      const rows = visibleFields(data.categories[cIdx].fields);
+      const picked = rows.filter(({ fIdx }) => selectedLines.has(lineKey("out", cIdx, fIdx))).length;
+      input.checked = rows.length > 0 && picked === rows.length;
+      input.indeterminate = picked > 0 && picked < rows.length;
+    });
   }
 
   function addNewCategory() {
